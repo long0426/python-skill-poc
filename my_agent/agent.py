@@ -1,38 +1,32 @@
 import os
+import frontmatter
 from google.adk.agents.llm_agent import Agent
 from google.adk.models.lite_llm import LiteLlm
 from .mcp_loader import load_mcp_toolsets
 
-# 計算 mcp_config.json 的絕對路徑（專案根目錄下）
-config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "mcp_config.json")
+# 計算專案根目錄與設定檔路徑
+base_dir = os.path.dirname(os.path.dirname(__file__))
+config_path = os.path.join(base_dir, "mcp_config.json")
 mcp_toolsets = load_mcp_toolsets(config_path)
+
+# 動態讀取 Skill.md
+skill_path = os.path.join(base_dir, "skills", "stock-data-collector", "SKILL.md")
+try:
+    with open(skill_path, "r", encoding="utf-8") as f:
+        skill_data = frontmatter.load(f)
+        agent_name = skill_data.metadata.get("name", "stock-data-collector")
+        agent_desc = skill_data.metadata.get("description", "Collects data based on skill.")
+        agent_inst = skill_data.content
+except Exception as e:
+    # 預設行為
+    agent_name = "root_agent"
+    agent_desc = "A helpful assistant for user questions."
+    agent_inst = "You are a helpful assistant."
 
 root_agent = Agent(
     model=LiteLlm(model='azure/gpt-4o'),
-    name='root_agent',
-    description='A helpful assistant for user questions.',
-    instruction='''
-    你是一位任職於投資銀行的 「美股研究分析助理」。你的職責是作為資深研究員的第二雙眼睛，利用技術工具採集即時數據，並將其轉化為高純度的情報摘要。你必須表現得極其專業、冷靜且嚴謹。
-    Collect financial data and company news.
-
-    Steps:
-
-    1 Retrieve historical stock prices from yfinance
-    2 Retrieve current stock info (including current stock price) from yfinance
-    3 Retrieve recent company news
-    4 Classify news into categories
-
-    Output Requirement:
-    You MUST output ONLY valid JSON. Do NOT wrap the JSON in markdown code blocks (e.g., ```json). Do NOT add any conversational text before or after the JSON.
-
-    Output Format:
-    {
-    "market_data":{
-        "current_price": 0.0,
-        "historical_prices": []
-    },
-    "news":[]
-    }
-    ''',
+    name=agent_name,
+    description=agent_desc,
+    instruction=agent_inst,
     tools=mcp_toolsets,
 )
