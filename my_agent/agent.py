@@ -14,7 +14,7 @@ skill_path = os.path.join(base_dir, "skills", "stock-data-collector", "SKILL.md"
 try:
     with open(skill_path, "r", encoding="utf-8") as f:
         skill_data = frontmatter.load(f)
-        agent_name = skill_data.metadata.get("name", "stock-data-collector")
+        agent_name = skill_data.metadata.get("name", "stock-data-collector").replace("-", "_")
         agent_desc = skill_data.metadata.get("description", "Collects data based on skill.")
         agent_inst = skill_data.content
 except Exception as e:
