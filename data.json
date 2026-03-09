@@ -1,0 +1,234 @@
+{
+    "market_data": {
+        "current_price": 396.73,
+        "historical_prices": [
+            {
+                "Date": "2026-02-09T05:00:00.000Z",
+                "Open": 409.91,
+                "High": 421.25,
+                "Low": 407.29,
+                "Close": 417.32,
+                "Volume": 54484300,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-02-10T05:00:00.000Z",
+                "Open": 418.08,
+                "High": 427.25,
+                "Low": 417.0,
+                "Close": 425.21,
+                "Volume": 64450200,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-02-11T05:00:00.000Z",
+                "Open": 427.96,
+                "High": 436.35,
+                "Low": 420.03,
+                "Close": 428.27,
+                "Volume": 57362000,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-02-12T05:00:00.000Z",
+                "Open": 430.3,
+                "High": 436.23,
+                "Low": 414.0,
+                "Close": 417.07,
+                "Volume": 61933400,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-02-13T05:00:00.000Z",
+                "Open": 414.31,
+                "High": 424.06,
+                "Low": 410.88,
+                "Close": 417.44,
+                "Volume": 51434100,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-02-17T05:00:00.000Z",
+                "Open": 412.36,
+                "High": 413.72,
+                "Low": 400.51,
+                "Close": 410.63,
+                "Volume": 59678800,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-02-18T05:00:00.000Z",
+                "Open": 411.11,
+                "High": 416.9,
+                "Low": 409.58,
+                "Close": 411.32,
+                "Volume": 45921400,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-02-19T05:00:00.000Z",
+                "Open": 407.25,
+                "High": 415.25,
+                "Low": 404.11,
+                "Close": 411.71,
+                "Volume": 51019600,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-02-20T05:00:00.000Z",
+                "Open": 408.3,
+                "High": 414.7,
+                "Low": 405.5,
+                "Close": 411.82,
+                "Volume": 57912200,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-02-23T05:00:00.000Z",
+                "Open": 407.29,
+                "High": 407.7,
+                "Low": 394.04,
+                "Close": 399.83,
+                "Volume": 69680000,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-02-24T05:00:00.000Z",
+                "Open": 399.5,
+                "High": 410.82,
+                "Low": 397.64,
+                "Close": 409.38,
+                "Volume": 58579500,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-02-25T05:00:00.000Z",
+                "Open": 412.15,
+                "High": 420.34,
+                "Low": 412.15,
+                "Close": 417.4,
+                "Volume": 54809700,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-02-26T05:00:00.000Z",
+                "Open": 414.42,
+                "High": 416.81,
+                "Low": 403.66,
+                "Close": 408.58,
+                "Volume": 53602500,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-02-27T05:00:00.000Z",
+                "Open": 402.94,
+                "High": 407.12,
+                "Low": 398.11,
+                "Close": 402.51,
+                "Volume": 56890100,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-03-02T05:00:00.000Z",
+                "Open": 390.6,
+                "High": 404.54,
+                "Low": 388.25,
+                "Close": 403.32,
+                "Volume": 55088300,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-03-03T05:00:00.000Z",
+                "Open": 395.09,
+                "High": 396.34,
+                "Low": 385.39,
+                "Close": 392.43,
+                "Volume": 62617300,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-03-04T05:00:00.000Z",
+                "Open": 397.85,
+                "High": 408.33,
+                "Low": 394.58,
+                "Close": 405.94,
+                "Volume": 68305500,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-03-05T05:00:00.000Z",
+                "Open": 401.57,
+                "High": 408.62,
+                "Low": 399.42,
+                "Close": 405.55,
+                "Volume": 51925900,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            },
+            {
+                "Date": "2026-03-06T05:00:00.000Z",
+                "Open": 398.09,
+                "High": 402.35,
+                "Low": 394.21,
+                "Close": 396.73,
+                "Volume": 63870200,
+                "Dividends": 0.0,
+                "Stock Splits": 0.0
+            }
+        ]
+    },
+    "news": [
+        {
+            "title": "Apple, Tesla, and Alphabet All Sinking As Oil Prices Explode Higher",
+            "summary": "Sunday nights are never happy. Most investors are preparing to head to work tomorrow, but tonight is especially tough. Sunday evening just got uncomfortable for stock investors. WTI crude oil futures have exploded past $108 per barrel tonight, and the ripple effect is hitting three of the most widely held stocks in America.",
+            "url": "https://247wallst.com/investing/2026/03/08/apple-tesla-and-alphabet-all-sinking-as-oil-prices-explode-higher/"
+        },
+        {
+            "title": "F-150 Lightning Outsold Tesla's Cybertruck, But Ford CEO Says He 'Would've Done It Differently'",
+            "summary": "Ford Motor Company has stopped production of several electric vehicles and de-emphasized a former large portion of its growth strategy. In a recent interview, Ford CEO Jim Farley says he would have done things differently.",
+            "url": "https://finance.yahoo.com/news/f-150-lightning-outsold-teslas-220039312.html"
+        },
+        {
+            "title": "Tesla's Europe Registrations Rise 10% In February Despite Sales Drops In Key Markets",
+            "summary": "Tesla Inc. has recorded an uptick in its reported registrations across multiple markets in the European region, representing a 10% YoY surge from February 2025.",
+            "url": "https://finance.yahoo.com/news/teslas-europe-registrations-rise-10-193022920.html"
+        },
+        {
+            "title": "Elon Musk Announced In 2020 To Own Almost Nothing. A New Report Says He Quietly Built 90 Texas Companies With Expanding Assets",
+            "summary": "In 2020, Elon Musk announced he would own almost nothing. However, a recent report suggests he quietly built 90 Texas companies.",
+            "url": "https://finance.yahoo.com/news/elon-musk-announced-2020-own-180033918.html"
+        },
+        {
+            "title": "YieldMax’s TSLA Option Income ETF Has a 60%+ Yield And a Track Record That Should Terrify You",
+            "summary": "TSLY paid out significant distributions in 2024 with an annualized yield cited as high as 75.31%.",
+            "url": "https://247wallst.com/investing/2026/03/08/yieldmaxs-tsla-option-income-etf-has-a-60-yield-and-a-track-record-that-should-terrify-you/"
+        },
+        {
+            "title": "Maye Musk Shares Emotional Tesla Crash Story, Says Photographer Credited Tesla And Elon For Saving His Family",
+            "summary": "During a Tesla Club Austria interview, Maye Musk recounted how a photographer credited Tesla and Elon Musk with saving his family.",
+            "url": "https://finance.yahoo.com/news/maye-musk-shares-emotional-tesla-143032323.html"
+        },
+        {
+            "title": "Tesla Optimus Robot Push Reshapes Growth Story Beyond Electric Vehicles",
+            "summary": "Tesla is shifting production at Fremont factory toward Optimus humanoid robots for large-scale production.",
+            "url": "https://finance.yahoo.com/news/tesla-optimus-robot-push-reshapes-001718649.html"
+        }
+    ]
+}
