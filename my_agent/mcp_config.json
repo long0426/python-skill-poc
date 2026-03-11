@@ -1,0 +1,13 @@
+{
+    "mcpServers": {
+        "yfinance": {
+            "command": "uv",
+            "args": [
+                "--directory",
+                "/Users/long0426/Documents/project/mcp/yahoo-finance-mcp",
+                "run",
+                "server.py"
+            ]
+        }
+    }
+}
