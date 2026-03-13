@@ -2,3 +2,4 @@
 .env
 .adk
 __pycache__
+logs

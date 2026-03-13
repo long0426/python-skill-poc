@@ -4,7 +4,8 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.12"
 dependencies = [
-    "google-adk==1.21.0",
+    "google-adk[gradio]==1.21.0",
+    "gradio>=6.9.0",
     "litellm>=1.82.0",
     "python-frontmatter>=1.1.0",
     "pyyaml>=6.0.3",
