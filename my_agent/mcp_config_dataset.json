@@ -1,0 +1,13 @@
+{
+    "mcpServers": {
+        "financial-datasets": {
+            "command": "uv",
+            "args": [
+                "--directory",
+                "/Users/long0426/Documents/project/mcp/mcp-server",
+                "run",
+                "server.py"
+            ]
+        }
+    }
+}
