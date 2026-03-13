@@ -4,12 +4,11 @@ import os
 from datetime import datetime
 from google.adk.agents.llm_agent import Agent
 from google.adk.models.lite_llm import LiteLlm
-from .tools.time import get_current_time, calculate_past_time
+import importlib.util
+import inspect
 from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
 from mcp import StdioServerParameters
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-
-from .skill_manager import SkillManager
 
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models.llm_request import LlmRequest
@@ -109,29 +108,6 @@ def log_prompt_length(
 
 # The current script is in my_agent directory
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Initialize the Skill Manager
-skill_manager = SkillManager(os.path.join(CURRENT_DIR, "skills"))
-
-# system_prompt = """
-# 你是一位任職於投資銀行的「美股研究分析助理」。
-# 你的職責是作為資深研究員的第二雙眼睛，利用技術工具採集即時數據，並將其轉化為高純度的情報摘要。
-# 你必須表現得極其專業、冷靜且嚴謹。
-
-# [CRITICAL INSTRUCTION: SKILL SYSTEM]
-# You have access to a dynamically loaded skill system. Detailed SOPs (Standard Operating Procedures) are hidden to save resources. 
-# You MUST load them via the `read_skill` tool when needed.
-
-# [CRITICAL INSTRUCTION: WORKFLOW]
-# If the user provides ONLY a stock ticker symbol (e.g., "AAPL", "TSLA"), you MUST execute the following exact 5-step sequence in order without asking clarifying questions:
-# 1. You already have the skills metadata and user prompt.
-# 2. FIRST, call the `read_skill` tool to load the data collection rules. Do not load any other skills at this time.
-# 3. AFTER the data is fetched, call the `read_skill` tool to load the analytical rules.
-# 4. FINALLY, generate and return the factual-synthesis analysis results based ONLY on the fetched data. Do not call `read_skill` again.
-# 5. FINAL FORMAT: 這是面向使用者的最終步驟，你「必須」使用 Markdown 格式輸出 [cite: 56][cite_start]。嚴禁輸出 JSON 代碼塊給使用者，確保閱讀體驗符合投行專業標準 [cite: 1]。
-
-# Never assume you know the contents of a skill. ALWAYS call `read_skill` exactly once per skill when needed.
-# """
 
 system_prompt = """
 ================================================
@@ -243,21 +219,6 @@ All tool executions must be transparently handled but formatted for the user acc
 
 print(f"[系統啟動] 完成！(目前 System Prompt 字元數: {len(system_prompt)})")
 
-def read_skill(skill_name: str) -> str:
-    """Read the full content and standard operating procedure for a specific skill.
-    
-    Args:
-        skill_name: The name of the skill to read (e.g. data-harvesting, factual-synthesis).
-    """
-    return skill_manager.get_skill_content(skill_name)
-
-def get_available_skills_summary() -> str:
-    """Get a summary of all available skills and their descriptions.
-    
-    Returns:
-        A formatted string describing all available skills and what they do.
-    """
-    return skill_manager.get_available_skills_summary()
 
 # Construct MCP tools from config mapping
 config_path = os.path.join(CURRENT_DIR, "mcp_config.json")
@@ -281,11 +242,43 @@ if os.path.exists(config_path):
             mcp_tools.append(toolset)
             print(f"[系統啟動] 掛載 MCP Server: {server_name}")
 
+def load_local_tools() -> list:
+    """自動載入 tools 目錄下的所有 function 工具"""
+    tools = []
+    tools_dir = os.path.join(CURRENT_DIR, "tools")
+    if not os.path.exists(tools_dir):
+        return tools
+        
+    for filename in os.listdir(tools_dir):
+        if filename.endswith(".py") and not filename.startswith("__"):
+            module_name = filename[:-3]
+            file_path = os.path.join(tools_dir, filename)
+            
+            try:
+                # 從檔案動態載入模組
+                spec = importlib.util.spec_from_file_location(module_name, file_path)
+                if spec and spec.loader:
+                    module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(module)
+                    
+                    # 掃描並過濾 function
+                    for name, obj in inspect.getmembers(module, inspect.isfunction):
+                        # 排除私有函式，並確保是從該檔案載入的
+                        if not name.startswith('_') and obj.__module__ == module_name:
+                            tools.append(obj)
+                            print(f"[系統啟動] 掛載 Local Tool: {name} (from {filename})")
+            except Exception as e:
+                print(f"[系統啟動] 警告：無法載入 Tool 檔案 {filename} ({e})")
+                
+    return tools
+
+local_tools = load_local_tools()
+
 root_agent = Agent(
     name="us_stock_research_assistant_agent",
-    description="投資銀行「美股研究分析助理」，使用 MCP 取得盤面與新聞資料，並可以依據按需加載的 SOP 產生純粹的分析報告。",
+    description="投資銀行「美股研究分析助理」，使用 MCP 取得盤面與新聞去資料，並可以依據按需加載的 SOP 產生純粹的分析報告。",
     model=LiteLlm(model='azure/gpt-4o'),
     instruction=system_prompt,
-    tools=[read_skill, get_available_skills_summary, get_current_time, calculate_past_time] + mcp_tools,
+    tools=local_tools + mcp_tools,
     before_model_callback=log_prompt_length,
 )
