@@ -1,9 +1,10 @@
 import json
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 from google.adk.agents.llm_agent import Agent
 from google.adk.models.lite_llm import LiteLlm
+from .tools.time import get_current_time, calculate_past_time
 from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
 from mcp import StdioServerParameters
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
@@ -257,26 +258,6 @@ def get_available_skills_summary() -> str:
         A formatted string describing all available skills and what they do.
     """
     return skill_manager.get_available_skills_summary()
-
-def get_current_time() -> str:
-    """獲取當前的系統時間。
-    
-    Returns:
-        字串格式的當前時間 (ISO 8601)。
-    """
-    return datetime.now().astimezone().isoformat()
-
-def calculate_past_time(hours_ago: float) -> str:
-    """計算過去特定小時數之前的時間。
-    
-    Args:
-        hours_ago: 要計算的過去幾小時 (例如：72 代表 72 小時前)。
-        
-    Returns:
-        字串格式的歷史時間 (ISO 8601)。
-    """
-    past_time = datetime.now().astimezone() - timedelta(hours=hours_ago)
-    return past_time.isoformat()
 
 # Construct MCP tools from config mapping
 config_path = os.path.join(CURRENT_DIR, "mcp_config.json")
