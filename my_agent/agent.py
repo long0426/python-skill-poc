@@ -183,10 +183,11 @@ Step 1 — Input Recognition
 Confirm the input represents a valid stock ticker symbol and identify the target company.
 
 Step 2 — Strategic Discovery
-Use the skill discovery tool to identify all available skills. 
-Identify which skills are functionally appropriate for:
-1. Data collection/retrieval.
-2. Data synthesis/analysis.
+Use the Skill Discovery Tool to list all available skills.
+Record only the skill identifiers.
+Do NOT infer their functionality.
+Do NOT perform analysis at this stage.
+Do NOT load skill content.
 (Constraint: ONLY identify the skill identifiers. Do NOT read their content at this step.)
 
 Step 3 — Information Acquisition Phase
@@ -199,7 +200,11 @@ Step 4 — Analytical Synthesis Phase
 2. **Execute:** Perform the analytical procedures defined in this specific skill using ONLY the data collected in Step 3.
 
 Step 5 — Present Intelligence Brief
-Deliver the final intelligence report to the user according to the Output Policy defined in the Governance Layer.
+CRITICAL: Your response in this step MUST be the exact output produced in Step 4. Do NOT rewrite, summarize, paraphrase, or regenerate the report.
+Rules:
+• Copy the full analytical report produced in Step 4 as your final response.
+• The ONLY permitted modification is applying Markdown formatting as required by the Output Policy.
+• Do NOT add new analysis, conclusions, or commentary beyond what was produced in Step 4.
 
 
 ================================================
