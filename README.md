@@ -15,7 +15,7 @@
 
 本專案展示了一個更乾淨的模式：**Agent 只在需要時，才加載對應的技能，執行完後即釋放。**
 
-技能格式參考了 [agentskills.io](https://agentskills.io/specification) 的規範 —— 每個技能都是一個 `SKILL.md` 檔案，包含 YAML Frontmatter 格式的標記資料 (Metadata) 以及 Markdown 格式的 SOP 內容。
+Skill格式參考了 [agentskills.io](https://agentskills.io/specification) 的規範 —— 每個Skill都是一個 `SKILL.md` 檔案，包含 YAML Frontmatter 格式的標記資料 (Metadata) 以及 Markdown 格式的 SOP 內容。
 
 ---
 
@@ -62,8 +62,8 @@ python-skill-poc/
 | 元件 | 職責 |
 |---|---|
 | `SkillManager` | 在啟動時掃描 `skills/` 目錄，僅讀取元數據（延遲加載）。 |
-| `discover_skills()` | 暴露給 Agent 的工具 —— 回傳所有可用技能的摘要。 |
-| `load_skill_protocol()` | 暴露給 Agent 的工具 —— 讀取並回傳特定技能的完整 SOP 內容。 |
+| `discover_skills()` | 暴露給 Agent 的工具 —— 回傳所有可用Skill的摘要。 |
+| `load_skill_protocol()` | 暴露給 Agent 的工具 —— 讀取並回傳特定Skill的完整 SOP 內容。 |
 | `log_prompt_length` | 基於 `before_model_callback` —— 紀錄 Prompt 長度，並將每次 LLM 呼叫存檔至 `logs/`。 |
 | MCP Toolset | 依據 `mcp_config.json` 連接外部 MCP Server（如 Yahoo Finance）。 |
 
@@ -71,7 +71,7 @@ python-skill-poc/
 
 ## 技能 (Skills) 目錄運作機制
 
-每個技能都是 `my_agent/skills/` 下的一個子目錄，其中包含一個 `SKILL.md` 檔案：
+每個Skill都是 `my_agent/skills/` 下的一個子目錄，其中包含一個 `SKILL.md` 檔案：
 
 ```markdown
 ---
@@ -87,8 +87,8 @@ metadata:
 ...
 ```
 
-- **Frontmatter**：啟動時解析，用於輕量級的技能發現 (Discovery)。
-- **Body**：按需加載，只有當 Agent 明確請求讀取該技能內容時才會載入。
+- **Frontmatter**：啟動時解析，用於輕量級的Skill發現 (Discovery)。
+- **Body**：按需加載，只有當 Agent 明確請求讀取該Skill內容時才會載入。
 
 ---
 
@@ -100,10 +100,10 @@ Agent 運行於一個四層治理架構下：
 治理層 (Governance) → 角色層 (Role) → 任務層 (Task) → 工具層 (Tool)
 ```
 
-- **治理層**：強制執行「零幻覺」、「來源標註」以及「JIT 技能加載」規則。
+- **治理層**：強制執行「零幻覺」、「來源標註」以及「JIT Skill加載」規則。
 - **角色層**：投資銀行的股票研究助理。
 - **任務層**：定義了美股情報簡報的 5 個嚴格執行步驟。
-- **工具層**：包含技能管理工具、MCP 工具以及本地 Python 函式。
+- **工具層**：包含Skill管理工具、MCP 工具以及本地 Python 函式。
 
 ---
 
@@ -143,20 +143,38 @@ AZURE_API_VERSION=2024-02-01
 
 **4. 設定 MCP Server (選配)**
 
-編輯 `my_agent/mcp_config.json` 以指向你的本地 MCP server：
+本專案建議使用 [Yahoo Finance MCP](https://github.com/Alex2Yang97/yahoo-finance-mcp) 作為市場數據來源。
+
+**4.1 本地安裝 MCP Server**
+
+請在與本專案併列的目錄下執行以下指令：
+
+```bash
+# 1. 複製儲存庫
+git clone https://github.com/Alex2Yang97/yahoo-finance-mcp.git
+cd yahoo-finance-mcp
+
+# 2. 建立並啟動虛擬環境項，安裝依賴
+uv venv
+source .venv/bin/activate  # Windows 使用: .venv\Scripts\activate
+uv pip install -e .
+```
+
+**4.2 配置 my_agent**
+
+編輯 `my_agent/mcp_config.json` 以指向你的本地 MCP server。請確保將 `/絕對路徑/到/` 替換為你實際存放該專案的絕對路徑：
 
 ```json
 {
     "mcpServers": {
         "yfinance": {
             "command": "uv",
-            "args": ["--directory", "/path/to/your/yahoo-finance-mcp", "run", "server.py"]
+            "args": ["--directory", "/絕對路徑/到/yahoo-finance-mcp", "run", "server.py"]
         }
     }
 }
 ```
 
-> 如果未設定 MCP，Agent 仍可運行，但會缺少外部即時數據獲取能力。
 
 ---
 

@@ -8,6 +8,13 @@
                 "run",
                 "server.py"
             ]
+        },
+        "fetcher": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "fetcher-mcp"
+            ]
         }
     }
 }
