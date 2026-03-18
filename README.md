@@ -1,5 +1,9 @@
+<p align="right">
+  <a href="./README.zh-TW.md">繁體中文版</a>
+</p>
+
 <p align="center">
-  <img src="/Users/long0426/.gemini/antigravity/brain/2e4cccc0-7f7a-432c-b6f4-893fd838c980/python_skill_poc_logo_1773796648905.png" width="300" alt="Python Skill POC Logo">
+  <img src="./logo.png" width="300" alt="Python Skill POC Logo">
 </p>
 
 <h1 align="center">Python Skill POC</h1>
@@ -17,20 +21,20 @@
 
 ---
 
-## 💡 核心概念：按需加載 (JIT Loading)
+## 💡 Core Concept: Just-in-Time (JIT) Loading
 
-這是一個關於 **Just-in-Time (JIT) Skill Loading** 的技術驗證專案。核心概念是：根據任務需求，**動態地**將特定領域的標準作業程序 (SOP) 與工具注入到 AI Agent 中，而不是在啟動時就塞入所有內容。
+This is a technical Proof of Concept (POC) project for **Just-in-Time (JIT) Skill Loading**. The core idea is to **dynamically** inject domain-specific Standard Operating Procedures (SOPs) and tools into an AI Agent based on task requirements, rather than overloading the agent with all capabilities at startup.
 
 > [!TIP]
-> **優勢：** 
-> 1. **節省 Token**：避免無關的 SOP 佔用 Context Window。
-> 2. **精準行為**：防止技能間的行為污染，確保 Agent 專注於當前任務。
+> **Advantages:** 
+> 1. **Token Efficiency**: Prevents irrelevant SOPs from consuming the Context Window.
+> 2. **Behavioral Integrity**: Avoids "behavioral contamination" between skills, ensuring the agent remains focused on the current task.
 
 ---
 
-## 🛠️ 技術架構
+## 🛠️ Technical Architecture
 
-本專案展示了 **「載入 → 執行 → 釋放」** 的極簡循環：
+This project demonstrates a streamlined **"Load → Execute → Release"** cycle:
 
 ```mermaid
 graph TD
@@ -45,39 +49,39 @@ graph TD
     style E fill:#00ff00,stroke:#333,stroke-width:2px
 ```
 
-### 目錄結構
+### Directory Structure
 
 ```text
 my_agent/
-├── agent.py            # 🤖 ADK Agent 定義與治理規則
-├── skill_manager.py     # 📂 技能掃描與元數據解析
-├── mcp_config.json      # 🔌 MCP Server 配置中心
-├── skills/              # 📚 技能庫 (各包含 SKILL.md)
+├── agent.py            # 🤖 ADK Agent definition & Governance rules
+├── skill_manager.py     # 📂 Skill scanning & Metadata parsing
+├── mcp_config.json      # 🔌 MCP Server configuration center
+├── skills/              # 📚 Skill Library (each contains SKILL.md)
 │   ├── data-harvesting
 │   └── factual-synthesis
-└── tools/               # 🔧 本地 Python 工具組
+└── tools/               # 🔧 Local Python tools
 ```
 
 ---
 
-## 🚀 範例展示：美股研究助理
+## 🚀 Scenario: US Stock Research Assistant
 
-當輸入股票代號（如 `NVDA`）時，Agent 會執行精密的工作流：
+When a stock symbol (e.g., `NVDA`) is provided, the agent executes a precise workflow:
 
-| 步驟 | 動作 | 技能 / 工具 |
+| Step | Action | Skill / Tool |
 |---|---|---|
-| 1 | **技能發現** | `discover_skills()` |
-| 2 | **資料採集** | 加載 `data-harvesting` |
-| 3 | **深度分析** | 加載 `factual-synthesis` |
-| 4 | **產出報告** | 生成結構化 Markdown |
+| 1 | **Skill Discovery** | `discover_skills()` |
+| 2 | **Data Harvesting** | Load `data-harvesting` |
+| 3 | **Factual Synthesis** | Load `factual-synthesis` |
+| 4 | **Report Output** | Generate structured Markdown |
 
 ---
 
-## 💻 快速開始
+## 💻 Quick Start
 
-### 1. 準備環境
+### 1. Environment Setup
 - Python 3.12+
-- [uv](https://docs.astral.sh/uv/) (強烈推薦)
+- [uv](https://docs.astral.sh/uv/) (Highly Recommended)
 
 ```bash
 git clone https://github.com/long0426/python-skill-poc.git
@@ -86,39 +90,39 @@ uv sync
 ```
 
 ```bash
-# 1. 複製儲存庫
+# 1. Clone the repository
 git clone https://github.com/Alex2Yang97/yahoo-finance-mcp.git
 cd yahoo-finance-mcp
 
-# 2. 建立並啟動虛擬環境，安裝依賴
+# 2. Create and activate virtual environment, install dependencies
 uv venv
-source .venv/bin/activate  # Windows 使用: .venv\Scripts\activate
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 uv pip install -e .
 ```
 
-**4.2 安裝 Fetcher MCP 與瀏覽器**
+### 4.2 Install Fetcher MCP and Browser
 
-`Fetcher MCP` 透過 `npx` 執行，但第一次使用前必須安裝 Playwright 所需的瀏覽器核心：
+`Fetcher MCP` runs via `npx`, but you must install the Playwright browser core before the first use:
 
 ```bash
-# 安裝 Playwright 瀏覽器 (僅需執行一次)
+# Install Playwright browser (only needs to be run once)
 npx playwright install chromium
 ```
 
 > [!NOTE]
-> **為什麼要安裝 Playwright？**
-> 與傳統爬蟲不同，Playwright 會啟動真實瀏覽器核心執行 JavaScript，這讓 Agent 能讀取現代化的動態網頁內容。
+> **Why install Playwright?**
+> Unlike traditional scrapers, Playwright launches a real browser core to execute JavaScript, allowing the Agent to read modern dynamic web content.
 
-**4.3 配置 my_agent**
+### 4.3 Configure my_agent
 
-編輯 `my_agent/mcp_config.json` 以指向你的 MCP server。請確保將 `/絕對路徑/到/` 替換為實際的絕對路徑：
+Edit `my_agent/mcp_config.json` to point to your MCP server. Ensure that `/absolute/path/to/` is replaced with your actual absolute path:
 
 ```json
 {
     "mcpServers": {
         "yfinance": {
             "command": "uv",
-            "args": ["--directory", "/絕對路徑/到/yahoo-finance-mcp", "run", "server.py"]
+            "args": ["--directory", "/absolute/path/to/yahoo-finance-mcp", "run", "server.py"]
         },
         "fetcher": {
             "command": "npx",
@@ -128,20 +132,20 @@ npx playwright install chromium
 }
 ```
 
-
 ---
 
-## 執行 Agent
+## 🏃 Run Agent
 
-使用 ADK web UI 啟動 Agent：
+Launch the Agent using the ADK web UI:
 
 ```bash
 uv run adk web .
 ```
 
-接著開啟瀏覽器並前往 `http://localhost:8000/dev-ui/?app=my_agent`，輸入股票代號開始對話：
+Then open your browser and go to `http://localhost:8000/dev-ui/?app=my_agent`. Enter a stock symbol to start the conversation:
 
-```
+```bash
+# Example inputs
 AAPL
 NVDA
 TSLA
@@ -149,52 +153,52 @@ TSLA
 
 ---
 
-## 如何新增技能
+## 📝 How to Add Skills
 
-1. 在 `my_agent/skills/` 下建立新目錄，例如 `my_agent/skills/risk-assessment/`。
-2. 新增 `SKILL.md` 檔案，並填入 YAML Frontmatter：
+1. Create a new directory under `my_agent/skills/`, e.g., `my_agent/skills/risk-assessment/`.
+2. Add a `SKILL.md` file with YAML Frontmatter:
 
 ```markdown
 ---
 name: risk-assessment
-description: 評估特定股票的下行風險因素與波動率。
+description: Evaluate downside risk factors and volatility for a specific stock.
 ---
 
-這裡填入你的 SOP 內容...
+Enter your SOP content here...
 ```
 
-3. 重啟 Agent —— `SkillManager` 會在啟動時自動發現新技能，無需修改任何程式碼。
+3. Restart the agent — `SkillManager` will automatically discover the new skill at startup.
 
 ---
 
-## 紀錄 (Logging)
+## 📊 Logging
 
-每次 LLM 呼叫都會自動記錄在 `my_agent/logs/` 中。每個 Session 會建立一個帶時間戳的子目錄：
+Every LLM call is automatically logged in `my_agent/logs/`. Each session generates a timestamped subdirectory:
 
-```
+```text
 my_agent/logs/
 └── AAPL_20260313101500/
-    ├── call_001.txt    # 第一次呼叫的 System Prompt + Context
-    ├── call_002.txt    # 第二次呼叫的內容
+    ├── call_001.txt    # System Prompt + Context (1st call)
+    ├── call_002.txt    # Content of the 2nd call
     └── ...
 ```
 
-這對於除錯 Prompt 內容、驗證技能注入邏輯以及審計 Token 消耗非常有用。
+This is valuable for debugging prompt content, verifying skill injection logic, and auditing token consumption.
 
 ---
 
-## 技術堆疊
+## ⚙️ Technology Stack
 
-| 套件 | 用途 |
+| Package | Purpose |
 |---|---|
-| `google-adk[gradio]` | Agent 框架與網頁 UI |
-| `litellm` | 統一的 LLM API (支援 Azure, OpenAI, Anthropic 等) |
-| `python-frontmatter` | 解析 SKILL.md 的 YAML 元數據 |
-| `pyyaml` | YAML 支援 |
-| `gradio` | 網頁前端介面 |
+| `google-adk[gradio]` | Agent framework and web UI |
+| `litellm` | Unified LLM API (supports Azure, OpenAI, Anthropic, etc.) |
+| `python-frontmatter` | Parse YAML metadata from `SKILL.md` |
+| `pyyaml` | YAML support |
+| `gradio` | Web interaction interface |
 
 ---
 
-## 授權
+## 🛡️ License
 
-MIT
+MIT. Crafted with care by **G-Agent** for **Long-Ge**.

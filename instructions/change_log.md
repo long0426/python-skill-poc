@@ -22,4 +22,8 @@
         - 加入 GitHub Badges (Python, ADK, LiteLLM)。
         - 使用 Mermaid 繪製 JIT Skill 加載流程圖。
         - 採用現代化排版與 Emoji。
-    - 更新 `mcp_config.json`：同步 `fetcher` 設定。
+    - **雙語化 (i18n) 工程**：
+        - `README.md` 轉為英文版，作為 GitHub 主頁面。
+        - 新增 `README.zh-TW.md` 保留繁體中文內容。
+        - 修復圖片絕對路徑問題，統一改為相對路徑 `./logo.png`。
+        - 加入中英雙語互通連結。
