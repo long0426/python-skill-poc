@@ -248,10 +248,30 @@ AZURE_API_VERSION=2024-02-01
 
 <details open>
   <summary><strong>4. 設定 MCP Server (選配)</strong></summary>
-  <p>本專案建議使用 <a href="https://github.com/Alex2Yang97/yahoo-finance-mcp">Yahoo Finance MCP</a>。</p>
+  <p>Agent 可以同時掛載多個 MCP Server。以下列出兩個常用來源，並示範如何在 <code>my_agent/mcp_config.json</code> 中完成設定。</p>
+
+  <table>
+    <tr>
+      <th>Server</th>
+      <th>用途</th>
+      <th>亮點</th>
+    </tr>
+    <tr>
+      <td><strong>Yahoo Finance MCP</strong></td>
+      <td>取得即時/歷史股價與公司新聞</td>
+      <td>Python 工具鏈、輕鬆串接 UV 虛擬環境</td>
+    </tr>
+    <tr>
+      <td><strong>Fetcher MCP</strong></td>
+      <td>透過多種抓取器統一取得 Web/API/RSS 資料</td>
+      <td>以 <code>npx</code> 快速啟動，擴充性強</td>
+    </tr>
+  </table>
 
   <details open>
-    <summary><strong>4.1 本地安裝 MCP Server</strong></summary>
+    <summary><strong>Yahoo Finance MCP 安裝與註冊</strong></summary>
+    <ol>
+      <li>複製專案並建立虛擬環境：
 
 ```bash
 git clone https://github.com/Alex2Yang97/yahoo-finance-mcp.git
@@ -260,31 +280,29 @@ uv venv
 source .venv/bin/activate  # Windows 使用: .venv\Scripts\activate
 uv pip install -e .
 ```
-  </details>
-
-  <details open>
-    <summary><strong>4.2 配置 my_agent</strong></summary>
-    <p>編輯 <code>my_agent/mcp_config.json</code>：</p>
+      </li>
+      <li>在 <code>my_agent/mcp_config.json</code> 中加入伺服器節點，並指向你的專案路徑：
 
 ```json
-{
-    "mcpServers": {
-        "yfinance": {
-            "command": "uv",
-            "args": ["--directory", "/絕對路徑/到/yahoo-finance-mcp", "run", "server.py"]
-        }
-    }
+"yfinance": {
+  "command": "uv",
+  "args": [
+    "--directory",
+    "/絕對路徑/到/yahoo-finance-mcp",
+    "run",
+    "server.py"
+  ]
 }
 ```
+      </li>
+    </ol>
   </details>
 
   <details open>
-    <summary><strong>4.3 使用 Fetcher MCP（多來源資料拉取）</strong></summary>
-    <p>若需要快速串接多個 Web/API 資料源，可整合 <a href="https://github.com/jae-jae/fetcher-mcp">fetcher-mcp</a>。它將多種抓取器封裝成 MCP Tool，讓 Agent 以統一界面觸發「抓資料 → 正規化 → 回傳」的工作流程。</p>
-    <p>基本步驟：</p>
+    <summary><strong>Fetcher MCP（多來源資料拉取）</strong></summary>
     <ol>
-      <li>依照官方 README 設定 Fetcher 所需的環境變數（例如目標來源、API Token 等）。</li>
-      <li>在 <code>my_agent/mcp_config.json</code> 新增伺服器節點，可直接透過 <code>npx</code> 執行 npm 套件：
+      <li>依 <a href="https://github.com/jae-jae/fetcher-mcp">fetcher-mcp</a> 說明建立所需的環境變數（API Token、管線設定等）。</li>
+      <li>在 <code>my_agent/mcp_config.json</code> 加入以下節點（若需額外環境變數，可使用 <code>env</code> 欄位）：
 
 ```json
 "fetcher": {
@@ -293,9 +311,34 @@ uv pip install -e .
 }
 ```
       </li>
-      <li>必要時可在 <code>env</code> 欄位加入 Fetcher 所需的設定檔路徑或金鑰。</li>
-      <li>重新啟動 Agent，即可透過工具層呼叫 Fetcher MCP 取得指定網站、API 或 RSS 資料。</li>
     </ol>
+  </details>
+
+  <details open>
+    <summary><strong>範例整合：同時掛載多個 MCP</strong></summary>
+    <p>完成上述設定後，你的 <code>my_agent/mcp_config.json</code> 可長這樣：</p>
+
+```json
+{
+  "mcpServers": {
+    "yfinance": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/Users/long0426/Documents/project/mcp/yahoo-finance-mcp",
+        "run",
+        "server.py"
+      ]
+    },
+    "fetcher": {
+      "command": "npx",
+      "args": ["-y", "fetcher-mcp"]
+    }
+  }
+}
+```
+
+    <p>重新啟動 Agent 後即可同時使用兩種資料管道，按照任務需求動態挑選最合適的 MCP Tool。</p>
   </details>
 </details>
 
