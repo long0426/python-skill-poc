@@ -10,3 +10,16 @@
 ### agent.py
 - **修改目的**: 解決財務數據自動進位問題（例如 140.74715 被四捨五入為 140.75）。
 - **修改範圍**: 在 `system_prompt` 的 `GOVERNANCE LAYER` 中新增了第 6 條規則 `Data Precision Rule (Critical)`，強制要求保留工具取得的原始小數精度，且優先權高於一般的可讀性要求。
+
+## [2026-03-18]
+
+### factual-synthesis/SKILL.md
+- **修改目的**: 集成 `fetcher-mcp` 工具並大幅提升專案的 GitHub 視覺吸引力。
+- **修改範圍**:
+    - 集成 `Fetcher MCP`：更新安裝與配置說明。
+    - **README 視覺化升級**：
+        - 產生並嵌入科技感專案 Logo。
+        - 加入 GitHub Badges (Python, ADK, LiteLLM)。
+        - 使用 Mermaid 繪製 JIT Skill 加載流程圖。
+        - 採用現代化排版與 Emoji。
+    - 更新 `mcp_config.json`：同步 `fetcher` 設定。

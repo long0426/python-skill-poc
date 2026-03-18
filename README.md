@@ -1,168 +1,117 @@
-# python-skill-poc
+<p align="center">
+  <img src="/Users/long0426/.gemini/antigravity/brain/2e4cccc0-7f7a-432c-b6f4-893fd838c980/python_skill_poc_logo_1773796648905.png" width="300" alt="Python Skill POC Logo">
+</p>
 
-這是一個關於 **Just-in-Time (JIT) Skill Loading (按需加載技能)** 的技術驗證 (POC) 專案。其核心概念是：根據任務需求，動態地將特定領域的標準作業程序 (SOP) 與工具注入到 AI Agent 中，而非在啟動時就塞入所有內容。
+<h1 align="center">Python Skill POC</h1>
 
-本專案基於 [Google ADK](https://google.github.io/adk-docs/) 開發，並使用 `LiteLLM` 來確保模型切換的靈活性。
+<p align="center">
+  <strong>Just-in-Time (JIT) Skill Loading for AI Agents</strong>
+</p>
 
----
-
-## 背景與動機
-
-傳統的 AI Agent 通常在啟動時就負載了所有知識與指令，這會導致兩個主要問題：
-
-1. **上下文爆量 (Context Overflow)**：將無關的 SOP 塞進 Context Window 會浪費 Token，並降低模型的檢索準確度（容易失憶）。
-2. **行為污染 (Behavioral Contamination)**：例如一個負責「程式碼審查」的 Agent，如果同時啟動了「財務分析」技能，可能會在審查程式時意外套用了財務規則。
-
-本專案展示了一個更乾淨的模式：**Agent 只在需要時，才加載對應的技能，執行完後即釋放。**
-
-Skill格式參考了 [agentskills.io](https://agentskills.io/specification) 的規範 —— 每個Skill都是一個 `SKILL.md` 檔案，包含 YAML Frontmatter 格式的標記資料 (Metadata) 以及 Markdown 格式的 SOP 內容。
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge&logo=python" alt="Python">
+  <img src="https://img.shields.io/badge/Framework-Google%20ADK-orange?style=for-the-badge" alt="Google ADK">
+  <img src="https://img.shields.io/badge/LLM-LiteLLM-green?style=for-the-badge" alt="LiteLLM">
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License">
+</p>
 
 ---
 
-## 範例展示：美股研究助理
+## 💡 核心概念：按需加載 (JIT Loading)
 
-專案內包含了一個具體的實作範例：**美股情報簡報助理 (US Stock Intelligence Brief Assistant)**。
+這是一個關於 **Just-in-Time (JIT) Skill Loading** 的技術驗證專案。核心概念是：根據任務需求，**動態地**將特定領域的標準作業程序 (SOP) 與工具注入到 AI Agent 中，而不是在啟動時就塞入所有內容。
 
-當使用者提供股票代號（例如：`AAPL`, `NVDA`）時，Agent 會嚴格執行以下工作流：
-
-```
-1. 技能發現 (Skill Discovery)：僅列出可用技能摘要，不讀取詳細內容。
-2. 加載「data-harvesting」技能 → 執行資料採集 SOP（獲取股價、新聞）。
-3. 加載「factual-synthesis」技能 → 對採集到的資料執行分析 SOP。
-4. 產出結構化的 Markdown 投資建議報告。
-```
-
-Agent 永遠不會同時加載這兩個技能，而是遵循嚴格的 **「載入 → 執行 → 繼續下一步」** 的循環。
+> [!TIP]
+> **優勢：** 
+> 1. **節省 Token**：避免無關的 SOP 佔用 Context Window。
+> 2. **精準行為**：防止技能間的行為污染，確保 Agent 專注於當前任務。
 
 ---
 
-## 專案架構
+## 🛠️ 技術架構
 
-```
-python-skill-poc/
-├── main.py                         # 程式進入點 (僅印出啟動資訊)
-├── pyproject.toml                  # 使用 uv 管理的依賴套件
-└── my_agent/
-    ├── agent.py                    # ADK Agent 定義、MCP 工具組、回調函式
-    ├── skill_manager.py            # 掃描 skills/ 目錄，解析 SKILL.md 的標記資料
-    ├── mcp_config.json             # MCP Server 設定 (例如：Yahoo Finance)
-    ├── mcp_config_dataset.json     # 備用的 MCP 設定範例
-    ├── skills/
-    │   ├── data-harvesting/
-    │   │   └── SKILL.md            # SOP：以結構化 JSON 獲取市場數據與新聞
-    │   └── factual-synthesis/
-    │       └── SKILL.md            # SOP：將資料合成投資級別的情報分析
-    └── tools/
-        ├── skills.py               # 提供 discover_skills() 與 load_skill_protocol() 工具
-        └── time.py                 # 提供 get_current_time() 與 calculate_past_time() 工具
+本專案展示了 **「載入 → 執行 → 釋放」** 的極簡循環：
+
+```mermaid
+graph TD
+    A[User Request] --> B{Skill Discovery}
+    B -- Scan skills/ --> C[Available Skills List]
+    C --> D[Load Specific SKILL.md]
+    D -- Inject SOP --> E[Execute Task]
+    E --> F[Release Skill & Output Result]
+    F --> G[Next Step / End]
+    
+    style D fill:#f96,stroke:#333,stroke-width:2px
+    style E fill:#00ff00,stroke:#333,stroke-width:2px
 ```
 
-### 核心元件說明
+### 目錄結構
 
-| 元件 | 職責 |
-|---|---|
-| `SkillManager` | 在啟動時掃描 `skills/` 目錄，僅讀取元數據（延遲加載）。 |
-| `discover_skills()` | 暴露給 Agent 的工具 —— 回傳所有可用Skill的摘要。 |
-| `load_skill_protocol()` | 暴露給 Agent 的工具 —— 讀取並回傳特定Skill的完整 SOP 內容。 |
-| `log_prompt_length` | 基於 `before_model_callback` —— 紀錄 Prompt 長度，並將每次 LLM 呼叫存檔至 `logs/`。 |
-| MCP Toolset | 依據 `mcp_config.json` 連接外部 MCP Server（如 Yahoo Finance）。 |
-
----
-
-## 技能 (Skills) 目錄運作機制
-
-每個Skill都是 `my_agent/skills/` 下的一個子目錄，其中包含一個 `SKILL.md` 檔案：
-
-```markdown
----
-name: data-harvesting
-description: 收集當前與歷史股價，以及最新的公司新聞。
-metadata:
-  version: "1.0"
----
-
-步驟：
-1. 使用 get_current_time 工具獲取當前系統時間。
-2. 獲取歷史股價...
-...
+```text
+my_agent/
+├── agent.py            # 🤖 ADK Agent 定義與治理規則
+├── skill_manager.py     # 📂 技能掃描與元數據解析
+├── mcp_config.json      # 🔌 MCP Server 配置中心
+├── skills/              # 📚 技能庫 (各包含 SKILL.md)
+│   ├── data-harvesting
+│   └── factual-synthesis
+└── tools/               # 🔧 本地 Python 工具組
 ```
 
-- **Frontmatter**：啟動時解析，用於輕量級的Skill發現 (Discovery)。
-- **Body**：按需加載，只有當 Agent 明確請求讀取該Skill內容時才會載入。
+---
+
+## 🚀 範例展示：美股研究助理
+
+當輸入股票代號（如 `NVDA`）時，Agent 會執行精密的工作流：
+
+| 步驟 | 動作 | 技能 / 工具 |
+|---|---|---|
+| 1 | **技能發現** | `discover_skills()` |
+| 2 | **資料採集** | 加載 `data-harvesting` |
+| 3 | **深度分析** | 加載 `factual-synthesis` |
+| 4 | **產出報告** | 生成結構化 Markdown |
 
 ---
 
-## System Prompt 設計
+## 💻 快速開始
 
-Agent 運行於一個四層治理架構下：
-
-```
-治理層 (Governance) → 角色層 (Role) → 任務層 (Task) → 工具層 (Tool)
-```
-
-- **治理層**：強制執行「零幻覺」、「來源標註」以及「JIT Skill加載」規則。
-- **角色層**：投資銀行的股票研究助理。
-- **任務層**：定義了美股情報簡報的 5 個嚴格執行步驟。
-- **工具層**：包含Skill管理工具、MCP 工具以及本地 Python 函式。
-
----
-
-## 準備工作
-
+### 1. 準備環境
 - Python 3.12+
-- [`uv`](https://docs.astral.sh/uv/) 套件管理工具
-- 已設定環境變數的 Azure OpenAI (或相容) API 金鑰
-
----
-
-## 安裝步驟
-
-**1. 複製儲存庫**
+- [uv](https://docs.astral.sh/uv/) (強烈推薦)
 
 ```bash
 git clone https://github.com/long0426/python-skill-poc.git
 cd python-skill-poc
-```
-
-**2. 使用 `uv` 安裝依賴**
-
-```bash
 uv sync
 ```
-
-**3. 設定環境變數**
-
-在 `my_agent/` 目錄下建立 `.env` 檔案，填入模型憑證：
-
-```env
-# Azure OpenAI 範例
-AZURE_API_KEY=你的金鑰
-AZURE_API_BASE=https://你的資源名稱.openai.azure.com/
-AZURE_API_VERSION=2024-02-01
-```
-
-**4. 設定 MCP Server (選配)**
-
-本專案建議使用 [Yahoo Finance MCP](https://github.com/Alex2Yang97/yahoo-finance-mcp) 作為市場數據來源。
-
-**4.1 本地安裝 MCP Server**
-
-請在與本專案併列的目錄下執行以下指令：
 
 ```bash
 # 1. 複製儲存庫
 git clone https://github.com/Alex2Yang97/yahoo-finance-mcp.git
 cd yahoo-finance-mcp
 
-# 2. 建立並啟動虛擬環境項，安裝依賴
+# 2. 建立並啟動虛擬環境，安裝依賴
 uv venv
 source .venv/bin/activate  # Windows 使用: .venv\Scripts\activate
 uv pip install -e .
 ```
 
-**4.2 配置 my_agent**
+**4.2 安裝 Fetcher MCP 與瀏覽器**
 
-編輯 `my_agent/mcp_config.json` 以指向你的本地 MCP server。請確保將 `/絕對路徑/到/` 替換為你實際存放該專案的絕對路徑：
+`Fetcher MCP` 透過 `npx` 執行，但第一次使用前必須安裝 Playwright 所需的瀏覽器核心：
+
+```bash
+# 安裝 Playwright 瀏覽器 (僅需執行一次)
+npx playwright install chromium
+```
+
+> [!NOTE]
+> **為什麼要安裝 Playwright？**
+> 與傳統爬蟲不同，Playwright 會啟動真實瀏覽器核心執行 JavaScript，這讓 Agent 能讀取現代化的動態網頁內容。
+
+**4.3 配置 my_agent**
+
+編輯 `my_agent/mcp_config.json` 以指向你的 MCP server。請確保將 `/絕對路徑/到/` 替換為實際的絕對路徑：
 
 ```json
 {
@@ -170,6 +119,10 @@ uv pip install -e .
         "yfinance": {
             "command": "uv",
             "args": ["--directory", "/絕對路徑/到/yahoo-finance-mcp", "run", "server.py"]
+        },
+        "fetcher": {
+            "command": "npx",
+            "args": ["-y", "fetcher-mcp"]
         }
     }
 }
