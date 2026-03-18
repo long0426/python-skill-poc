@@ -277,6 +277,26 @@ uv pip install -e .
 }
 ```
   </details>
+
+  <details open>
+    <summary><strong>4.3 使用 Fetcher MCP（多來源資料拉取）</strong></summary>
+    <p>若需要快速串接多個 Web/API 資料源，可整合 <a href="https://github.com/jae-jae/fetcher-mcp">fetcher-mcp</a>。它將多種抓取器封裝成 MCP Tool，讓 Agent 以統一界面觸發「抓資料 → 正規化 → 回傳」的工作流程。</p>
+    <p>基本步驟：</p>
+    <ol>
+      <li>依照官方 README 設定 Fetcher 所需的環境變數（例如目標來源、API Token 等）。</li>
+      <li>在 <code>my_agent/mcp_config.json</code> 新增伺服器節點，可直接透過 <code>npx</code> 執行 npm 套件：
+
+```json
+"fetcher": {
+  "command": "npx",
+  "args": ["-y", "fetcher-mcp"]
+}
+```
+      </li>
+      <li>必要時可在 <code>env</code> 欄位加入 Fetcher 所需的設定檔路徑或金鑰。</li>
+      <li>重新啟動 Agent，即可透過工具層呼叫 Fetcher MCP 取得指定網站、API 或 RSS 資料。</li>
+    </ol>
+  </details>
 </details>
 
 ---
@@ -354,4 +374,3 @@ my_agent/logs/
 | <code>uv</code> | 高效的專案依賴管理 |
 
 ---
-
