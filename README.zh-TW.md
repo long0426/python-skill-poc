@@ -270,7 +270,8 @@ AZURE_API_VERSION=2024-02-01
 
   <details open>
     <summary><strong>Yahoo Finance MCP 安裝與註冊</strong></summary>
-    <p><strong>步驟 1：</strong> 複製專案並建立虛擬環境：</p>
+
+**步驟 1：複製專案並建立虛擬環境**
 
 ```bash
 git clone https://github.com/Alex2Yang97/yahoo-finance-mcp.git
@@ -279,7 +280,8 @@ uv venv
 source .venv/bin/activate  # Windows 使用: .venv\Scripts\activate
 uv pip install -e .
 ```
-    <p><strong>步驟 2：</strong> 在 <code>my_agent/mcp_config.json</code> 中加入伺服器節點，並指向你的專案路徑：</p>
+
+**步驟 2：在 `my_agent/mcp_config.json` 中加入伺服器節點，指向本地專案路徑**
 
 ```json
 "yfinance": {
@@ -296,8 +298,10 @@ uv pip install -e .
 
   <details open>
     <summary><strong>Fetcher MCP（多來源資料拉取）</strong></summary>
-    <p><strong>步驟 1：</strong> 依 <a href="https://github.com/jae-jae/fetcher-mcp">fetcher-mcp</a> 說明建立所需的環境變數（API Token、管線設定等）。</p>
-    <p><strong>步驟 2：</strong> 在 <code>my_agent/mcp_config.json</code> 加入以下節點（若需額外環境變數，可使用 <code>env</code> 欄位）：</p>
+
+**步驟 1：** 依 <a href="https://github.com/jae-jae/fetcher-mcp">fetcher-mcp</a> 說明建立所需的環境變數（API Token、管線設定等）。
+
+**步驟 2：** 在 `my_agent/mcp_config.json` 加入以下節點（若需額外環境變數，可使用 `env` 欄位）：
 
 ```json
 "fetcher": {
