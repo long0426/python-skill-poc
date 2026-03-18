@@ -15,45 +15,25 @@
   </p>
 </div>
 
-<div align="center">
-  <table>
-    <tr>
-      <td align="center"><strong>Python</strong><br />3.12+</td>
-      <td align="center"><strong>Framework</strong><br />Google ADK</td>
-      <td align="center"><strong>Manager</strong><br />uv</td>
-      <td align="center"><strong>LLM</strong><br />LiteLLM</td>
-      <td align="center"><strong>License</strong><br />MIT</td>
-    </tr>
-  </table>
-</div>
+| Python | Framework | Manager | LLM | License |
+| :---: | :---: | :---: | :---: | :---: |
+| 3.12+ | Google ADK | uv | LiteLLM | MIT |
 
 ---
 
 ## 📖 目錄
 
-<table>
-  <tr>
-    <td valign="top">
-      <ul>
-        <li><a href="#背景與動機">背景與動機</a></li>
-        <li><a href="#範例展示美股研究助理">範例展示：美股研究助理</a></li>
-        <li><a href="#專案架構">專案架構</a></li>
-        <li><a href="#技能-skills-目錄運作機制">技能 (Skills) 目錄運作機制</a></li>
-        <li><a href="#system-prompt-設計">System Prompt 設計</a></li>
-      </ul>
-    </td>
-    <td valign="top">
-      <ul>
-        <li><a href="#準備工作">準備工作</a></li>
-        <li><a href="#安裝步驟">安裝步驟</a></li>
-        <li><a href="#執行-agent">執行 Agent</a></li>
-        <li><a href="#如何新增技能">如何新增技能</a></li>
-        <li><a href="#紀錄-logging">紀錄 (Logging)</a></li>
-        <li><a href="#技術堆疊">技術堆疊</a></li>
-      </ul>
-    </td>
-  </tr>
-</table>
+- [背景與動機](#背景與動機)
+- [範例展示：美股研究助理](#範例展示美股研究助理)
+- [專案架構](#專案架構)
+- [技能 (Skills) 目錄運作機制](#技能-skills-目錄運作機制)
+- [System Prompt 設計](#system-prompt-設計)
+- [準備工作](#準備工作)
+- [安裝步驟](#安裝步驟)
+- [執行 Agent](#執行-agent)
+- [如何新增技能](#如何新增技能)
+- [紀錄 (Logging)](#紀錄-logging)
+- [技術堆疊](#技術堆疊)
 
 ---
 
@@ -61,26 +41,15 @@
 
 ## 🚀 背景與動機
 
-<table>
-  <tr>
-    <td valign="top" width="60%">
-      <p>這是一個關於 <strong>Just-in-Time (JIT) Skill Loading (按需加載技能)</strong> 的技術驗證 (POC) 專案。其核心概念是：根據任務需求，動態地將特定領域的標準作業程序 (SOP) 與工具注入到 AI Agent 中，而非在啟動時就塞入所有內容。</p>
-      <p>本專案基於 <a href="https://google.github.io/adk-docs/">Google ADK</a> 開發，並使用 <code>LiteLLM</code> 來確保模型切換的靈活性。</p>
-    </td>
-    <td valign="top" width="40%">
-      <blockquote>
-        <p><strong>⚠️ 傳統 AI Agent 的痛點</strong></p>
-        <ol>
-          <li><strong>上下文爆量 (Context Overflow)</strong>：將無關的 SOP 塞進 Context Window 會浪費 Token，並降低模型的檢索準確度（容易失憶）。</li>
-          <li><strong>行為污染 (Behavioral Contamination)</strong>：例如一個負責「程式碼審查」的 Agent，如果同時啟動了「財務分析」技能，可能會在審查程式時意外套用了財務規則。</li>
-        </ol>
-      </blockquote>
-      <blockquote>
-        <p><strong>✅ 解決方案</strong>：本專案展示了一個更乾淨的模式 —— <strong>Agent 只在需要時，才加載對應的技能，執行完後即釋放。</strong></p>
-      </blockquote>
-    </td>
-  </tr>
-</table>
+這是一個關於 **Just-in-Time (JIT) Skill Loading (按需加載技能)** 的技術驗證 (POC) 專案。核心概念是：根據任務需求，動態將特定領域的標準作業程序 (SOP) 與工具注入到 AI Agent 中，而非在啟動時就塞入所有內容。
+
+本專案基於 [Google ADK](https://google.github.io/adk-docs/) 開發，並使用 `LiteLLM` 來確保模型切換的靈活性。
+
+> **⚠️ 傳統 AI Agent 的痛點**
+> 1. **上下文爆量 (Context Overflow)**：將無關的 SOP 塞進 Context Window 會浪費 Token，並降低模型的檢索準確度（容易失憶）。
+> 2. **行為污染 (Behavioral Contamination)**：例如一個負責「程式碼審查」的 Agent，如果同時啟動了「財務分析」技能，可能會在審查程式時意外套用了財務規則。
+
+> **✅ 解決方案**：本專案展示了一個更乾淨的模式 —— **Agent 只在需要時，才加載對應的技能，執行完後即釋放。**
 
 Skill 格式參考了 <a href="https://agentskills.io/specification">agentskills.io</a> 的規範 —— 每個 Skill 都是一個 <code>SKILL.md</code> 檔案，包含 YAML Frontmatter 格式的標記資料 (Metadata) 以及 Markdown 格式的 SOP 內容。
 
@@ -114,11 +83,6 @@ graph TD
 
 ## 🏗️ 專案架構
 
-<div align="center">
-  <table>
-    <tr>
-      <td valign="top" width="60%">
-
 ```text
 python-skill-poc/
 ├── main.py                         # 程式進入點 (僅印出啟動資訊)
@@ -137,8 +101,6 @@ python-skill-poc/
         ├── skills.py               # Skill 管理工具
         └── time.py                 # 時間工具
 ```
-      </td>
-      <td valign="top" width="40%">
 
 ### 核心元件說明
 
@@ -149,10 +111,6 @@ python-skill-poc/
 | <strong><code>load_skill_protocol()</code></strong> | 工具 —— 讀取並回傳特定 Skill 的完整 SOP 內容。 |
 | <strong><code>log_prompt_length</code></strong> | 回調函式 —— 紀錄 Prompt 長度，並將 LLM 呼叫存檔至 <code>logs/</code>。 |
 | <strong>MCP Toolset</strong> | 依據 <code>mcp_config.json</code> 連接外部 MCP Server。 |
-      </td>
-    </tr>
-  </table>
-</div>
 
 ---
 
@@ -189,12 +147,10 @@ Agent 運行於一個四層治理架構下：
 > [!NOTE]
 > <strong>治理層 (Governance)</strong> → <strong>角色層 (Role)</strong> → <strong>任務層 (Task)</strong> → <strong>工具層 (Tool)</strong>
 
-<table>
-  <tr><td>1. <strong>治理層</strong>：強制執行「零幻覺」、「來源標註」以及「JIT Skill 加載」規則。</td></tr>
-  <tr><td>2. <strong>角色層</strong>：投資銀行的股票研究助理。</td></tr>
-  <tr><td>3. <strong>任務層</strong>：定義了美股情報簡報的 5 個嚴格執行步驟。</td></tr>
-  <tr><td>4. <strong>工具層</strong>：包含 Skill 管理工具、MCP 工具以及本地 Python 函式。</td></tr>
-</table>
+1. **治理層**：強制執行「零幻覺」、「來源標註」以及「JIT Skill 加載」規則。
+2. **角色層**：投資銀行的股票研究助理。
+3. **任務層**：定義了美股情報簡報的 5 個嚴格執行步驟。
+4. **工具層**：包含 Skill 管理工具、MCP 工具以及本地 Python 函式。
 
 ---
 
@@ -202,15 +158,9 @@ Agent 運行於一個四層治理架構下：
 
 ## 🛠️ 準備工作
 
-<div align="center">
-  <table>
-    <tr>
-      <td align="center"><strong>Python</strong>: 3.12+</td>
-      <td align="center"><strong>Manager</strong>: <a href="https://docs.astral.sh/uv/">uv</a> 套件管理工具</td>
-      <td align="center"><strong>LLM</strong>: Azure OpenAI (或相容) API 金鑰</td>
-    </tr>
-  </table>
-</div>
+- **Python**：3.12+
+- **Manager**：[`uv`](https://docs.astral.sh/uv/) 套件管理工具
+- **LLM**：Azure OpenAI（或相容）API 金鑰
 
 ---
 
@@ -237,7 +187,7 @@ uv sync
 
 <details open>
   <summary><strong>3. 設定環境變數</strong></summary>
-<p>在 <code>my_agent/</code> 下建立 <code>.env</code>：</p>
+在 <code>my_agent/</code> 下建立 <code>.env</code>：
 
 ```env
 AZURE_API_KEY=你的金鑰
@@ -248,25 +198,12 @@ AZURE_API_VERSION=2024-02-01
 
 <details open>
   <summary><strong>4. 設定 MCP Server (選配)</strong></summary>
-  <p>Agent 可以同時掛載多個 MCP Server。以下列出兩個常用來源，並示範如何在 <code>my_agent/mcp_config.json</code> 中完成設定。</p>
+Agent 可以同時掛載多個 MCP Server。以下列出兩個常用來源，並示範如何在 <code>my_agent/mcp_config.json</code> 中完成設定。
 
-  <table>
-    <tr>
-      <th>Server</th>
-      <th>用途</th>
-      <th>亮點</th>
-    </tr>
-    <tr>
-      <td><strong>Yahoo Finance MCP</strong></td>
-      <td>取得即時/歷史股價與公司新聞</td>
-      <td>Python 工具鏈、輕鬆串接 UV 虛擬環境</td>
-    </tr>
-    <tr>
-      <td><strong>Fetcher MCP</strong></td>
-      <td>透過多種抓取器統一取得 Web/API/RSS 資料</td>
-      <td>以 <code>npx</code> 快速啟動，擴充性強</td>
-    </tr>
-  </table>
+  | Server | 用途 | 亮點 |
+  | :--- | :--- | :--- |
+  | **Yahoo Finance MCP** | 取得即時/歷史股價與公司新聞 | Python 工具鏈、輕鬆串接 UV 虛擬環境 |
+  | **Fetcher MCP** | 透過多種抓取器統一取得 Web/API/RSS 資料 | 以 `npx` 快速啟動，擴充性強 |
 
   <details open>
     <summary><strong>Yahoo Finance MCP 安裝與註冊</strong></summary>
@@ -313,7 +250,7 @@ uv pip install -e .
 
   <details open>
     <summary><strong>範例整合：同時掛載多個 MCP</strong></summary>
-    <p>完成上述設定後，你的 <code>my_agent/mcp_config.json</code> 可長這樣：</p>
+完成上述設定後，你的 <code>my_agent/mcp_config.json</code> 可長這樣：
 
 ```json
 {
@@ -335,7 +272,7 @@ uv pip install -e .
 }
 ```
 
-    <p>重新啟動 Agent 後即可同時使用兩種資料管道，按照任務需求動態挑選最合適的 MCP Tool。</p>
+重新啟動 Agent 後即可同時使用兩種資料管道，按照任務需求動態挑選最合適的 MCP Tool。
   </details>
 </details>
 
