@@ -10,6 +10,7 @@ metadata:
 2. ZERO-POSITION-INTEGRITY: You must perform a digit-by-digit verification. Missing or misplacing a '0' is a critical failure.
 3. PARAMETER_FIDELITY: Use original keys as headers. If the source says 'grossMargins', output 'Gross Margins'. Do NOT rename to 'Net Margin'.
 4. NO_ROUNDING: Any rounding, truncation, or aesthetic formatting of decimals is strictly prohibited.
+5. This rule takes precedence over conventional readability or formatting standards.
 
 [OUTPUT SECTIONS]
 1. Base Market Data: Includes current price, 52-week range, market cap, P/E, gross margin.
