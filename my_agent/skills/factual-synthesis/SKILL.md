@@ -8,11 +8,11 @@ metadata:
 [CRITICAL RULES: DATA ACCURACY]
 1. DECIMAL-TO-PERCENTAGE: Strictly enforce 'Decimal-Point-Shift-Right-Two' rule. Every digit from the source must be preserved.
 2. ZERO-POSITION-INTEGRITY: You must perform a digit-by-digit verification. Missing or misplacing a '0' is a critical failure.
-3. PARAMETER_FIDELITY: Use original keys as headers. If the source says 'profitMargins', output 'Profit Margins'. Do NOT rename to 'Net Margin'.
+3. PARAMETER_FIDELITY: Use original keys as headers. If the source says 'grossMargins', output 'Gross Margins'. Do NOT rename to 'Net Margin'.
 4. NO_ROUNDING: Any rounding, truncation, or aesthetic formatting of decimals is strictly prohibited.
 
 [OUTPUT SECTIONS]
-1. Base Market Data: Includes current price, 52-week range, market cap, P/E, gross margin, and net margin.
+1. Base Market Data: Includes current price, 52-week range, market cap, P/E, gross margin.
 2. Recent News Summary: Summarize the latest news points and include headlines.
     a. Find the 2 most recent news items and use the appropriate mcp tool to retrieve full article content via URL.
     b. Based on the retrieved article content and collected data, summarize the key points within 300 words.* [MANDATORY] At the end of each news summary, you must provide the source URL in the format: Source URL: [URL].
