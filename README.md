@@ -1,174 +1,295 @@
-# python-skill-poc
+<p align="right">
+  <a href="./README.zh-TW.md">🌏 中文說明</a>
+</p>
 
-這是一個關於 **Just-in-Time (JIT) Skill Loading (按需加載技能)** 的技術驗證 (POC) 專案。其核心概念是：根據任務需求，動態地將特定領域的標準作業程序 (SOP) 與工具注入到 AI Agent 中，而非在啟動時就塞入所有內容。
+<div align="center">
+  <img src="./banner.png" width="100%" alt="Python Skill POC Banner" />
+  <h1>⚡ Python Skill POC</h1>
+  <p><strong>Just-in-Time (JIT) Skill Loading for AI Agents</strong></p>
+  <p>
+    <img src="https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+    <img src="https://img.shields.io/badge/Framework-Google%20ADK-orange?style=for-the-badge" alt="Google ADK" />
+    <img src="https://img.shields.io/badge/Manager-uv-764ABC?style=for-the-badge&logo=python&logoColor=white" alt="uv" />
+    <img src="https://img.shields.io/badge/LLM-LiteLLM-green?style=for-the-badge" alt="LiteLLM" />
+    <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License" />
+  </p>
+</div>
 
-本專案基於 [Google ADK](https://google.github.io/adk-docs/) 開發，並使用 `LiteLLM` 來確保模型切換的靈活性。
-
----
-
-## 背景與動機
-
-傳統的 AI Agent 通常在啟動時就負載了所有知識與指令，這會導致兩個主要問題：
-
-1. **上下文爆量 (Context Overflow)**：將無關的 SOP 塞進 Context Window 會浪費 Token，並降低模型的檢索準確度（容易失憶）。
-2. **行為污染 (Behavioral Contamination)**：例如一個負責「程式碼審查」的 Agent，如果同時啟動了「財務分析」技能，可能會在審查程式時意外套用了財務規則。
-
-本專案展示了一個更乾淨的模式：**Agent 只在需要時，才加載對應的技能，執行完後即釋放。**
-
-技能格式參考了 [agentskills.io](https://agentskills.io/specification) 的規範 —— 每個技能都是一個 `SKILL.md` 檔案，包含 YAML Frontmatter 格式的標記資料 (Metadata) 以及 Markdown 格式的 SOP 內容。
-
----
-
-## 範例展示：美股研究助理
-
-專案內包含了一個具體的實作範例：**美股情報簡報助理 (US Stock Intelligence Brief Assistant)**。
-
-當使用者提供股票代號（例如：`AAPL`, `NVDA`）時，Agent 會嚴格執行以下工作流：
-
-```
-1. 技能發現 (Skill Discovery)：僅列出可用技能摘要，不讀取詳細內容。
-2. 加載「data-harvesting」技能 → 執行資料採集 SOP（獲取股價、新聞）。
-3. 加載「factual-synthesis」技能 → 對採集到的資料執行分析 SOP。
-4. 產出結構化的 Markdown 投資建議報告。
-```
-
-Agent 永遠不會同時加載這兩個技能，而是遵循嚴格的 **「載入 → 執行 → 繼續下一步」** 的循環。
+| Python | Framework | Manager | LLM | License |
+| :---: | :---: | :---: | :---: | :---: |
+| 3.12+ | Google ADK | uv | LiteLLM | MIT |
 
 ---
 
-## 專案架構
+## 📖 Table of Contents
 
+- [Background & Motivation](#background)
+- [Example: US Stock Research Assistant](#example-us-stock-research-assistant)
+- [Project Structure](#project-structure)
+- [Skill Directory Mechanics](#skill-directory-mechanics)
+- [System Prompt Design](#system-prompt-design)
+- [Preparation](#preparation)
+- [Installation](#installation)
+- [Run the Agent](#run-the-agent)
+- [Add New Skills](#add-new-skills)
+- [Logging](#logging)
+- [Tech Stack](#tech-stack)
+
+---
+
+<a id="background"></a>
+
+## 🚀 Background & Motivation
+
+This proof-of-concept explores **Just-in-Time (JIT) Skill Loading**. Instead of stuffing every standard operating procedure (SOP) and tool into the agent at launch, it dynamically injects the exact SOP + toolset required for each task.
+
+The project is built on [Google ADK](https://google.github.io/adk-docs/) and uses `LiteLLM` so the model backend can be swapped flexibly.
+
+> **⚠️ Pain Points of Traditional Agents**
+> 1. **Context Overflow**: Packing irrelevant SOPs into the context window wastes tokens and hurts retrieval accuracy.
+> 2. **Behavioral Contamination**: A code-review agent that simultaneously loads a "financial analysis" skill may accidentally apply finance rules while reviewing code.
+
+> **✅ Solution**: JIT skill loading keeps the context clean—**the agent only loads the skill it needs, executes it, then releases it.**
+
+Each skill follows the [agentskills.io](https://agentskills.io/specification) format: every folder contains a `SKILL.md` with YAML frontmatter for metadata plus Markdown SOP content.
+
+---
+
+<a id="example-us-stock-research-assistant"></a>
+
+## 📊 Example: US Stock Research Assistant
+
+The repo ships with a concrete example: **US Stock Intelligence Brief Assistant**.
+
+When a user provides a ticker (e.g., `AAPL`, `NVDA`), the agent executes this workflow:
+
+```mermaid
+graph TD
+    A[Start] --> B{Skill Discovery}
+    B --> C[Load data-harvesting]
+    C --> D[Run data collection SOP]
+    D --> E[Load factual-synthesis]
+    E --> F[Scrape full-text news via Fetcher MCP]
+    F --> G[Run analysis SOP]
+    G --> H[Generate Markdown investment brief]
+    H --> I[Unload skill / Finish]
 ```
+
+> [!IMPORTANT]
+> The agent never loads both skills at the same time. It strictly follows **"load → execute → move on"**.
+
+---
+
+<a id="project-structure"></a>
+
+## 🏗️ Project Structure
+
+```text
 python-skill-poc/
-├── main.py                         # 程式進入點 (僅印出啟動資訊)
-├── pyproject.toml                  # 使用 uv 管理的依賴套件
+├── main.py                         # Entry point (prints boot info only)
+├── pyproject.toml                  # Dependencies managed by uv
 └── my_agent/
-    ├── agent.py                    # ADK Agent 定義、MCP 工具組、回調函式
-    ├── skill_manager.py            # 掃描 skills/ 目錄，解析 SKILL.md 的標記資料
-    ├── mcp_config.json             # MCP Server 設定 (例如：Yahoo Finance)
-    ├── mcp_config_dataset.json     # 備用的 MCP 設定範例
+    ├── agent.py                    # ADK agent definition, MCP tools, callbacks
+    ├── skill_manager.py            # Scans skills/, parses SKILL.md metadata
+    ├── mcp_config.json             # MCP Server config (e.g., Yahoo Finance)
+    ├── mcp_config_dataset.json     # Sample MCP config
     ├── skills/
     │   ├── data-harvesting/
-    │   │   └── SKILL.md            # SOP：以結構化 JSON 獲取市場數據與新聞
+    │   │   └── SKILL.md            # SOP: data collection
     │   └── factual-synthesis/
-    │       └── SKILL.md            # SOP：將資料合成投資級別的情報分析
+    │       └── SKILL.md            # SOP: intel synthesis
     └── tools/
-        ├── skills.py               # 提供 discover_skills() 與 load_skill_protocol() 工具
-        └── time.py                 # 提供 get_current_time() 與 calculate_past_time() 工具
+        ├── skills.py               # Skill management utilities
+        └── time.py                 # Time helper
 ```
 
-### 核心元件說明
+### Core Components
 
-| 元件 | 職責 |
-|---|---|
-| `SkillManager` | 在啟動時掃描 `skills/` 目錄，僅讀取元數據（延遲加載）。 |
-| `discover_skills()` | 暴露給 Agent 的工具 —— 回傳所有可用技能的摘要。 |
-| `load_skill_protocol()` | 暴露給 Agent 的工具 —— 讀取並回傳特定技能的完整 SOP 內容。 |
-| `log_prompt_length` | 基於 `before_model_callback` —— 紀錄 Prompt 長度，並將每次 LLM 呼叫存檔至 `logs/`。 |
-| MCP Toolset | 依據 `mcp_config.json` 連接外部 MCP Server（如 Yahoo Finance）。 |
+| Component | Responsibility |
+| :--- | :--- |
+| <strong><code>SkillManager</code></strong> | Scans `skills/` at startup and reads metadata only (lazy loading). |
+| <strong><code>discover_skills()</code></strong> | Tool that returns a summary of all available skills. |
+| <strong><code>load_skill_protocol()</code></strong> | Tool that fetches the full SOP content of a specific skill. |
+| <strong><code>log_prompt_length</code></strong> | Callback that records prompt length and stores each LLM call under `logs/`. |
+| <strong>MCP Toolset</strong> | Connects to external MCP servers via `mcp_config.json`. |
 
 ---
 
-## 技能 (Skills) 目錄運作機制
+<a id="skill-directory-mechanics"></a>
 
-每個技能都是 `my_agent/skills/` 下的一個子目錄，其中包含一個 `SKILL.md` 檔案：
+## ⚙️ Skill Directory Mechanics
+
+Each skill lives under `my_agent/skills/` as a folder containing `SKILL.md`:
 
 ```markdown
 ---
 name: data-harvesting
-description: 收集當前與歷史股價，以及最新的公司新聞。
+description: Collect current & historical stock prices plus the latest company news.
 metadata:
   version: "1.0"
 ---
 
-步驟：
-1. 使用 get_current_time 工具獲取當前系統時間。
-2. 獲取歷史股價...
-...
+Steps:
+1. Use get_current_time to fetch the current system time.
+2. Fetch historical pricing...
 ```
 
-- **Frontmatter**：啟動時解析，用於輕量級的技能發現 (Discovery)。
-- **Body**：按需加載，只有當 Agent 明確請求讀取該技能內容時才會載入。
+- **Frontmatter**: parsed at startup for lightweight skill discovery.
+- **Body**: loaded on demand only when the agent explicitly requests that skill.
 
 ---
 
-## System Prompt 設計
+<a id="system-prompt-design"></a>
 
-Agent 運行於一個四層治理架構下：
+## 🛡️ System Prompt Design
 
-```
-治理層 (Governance) → 角色層 (Role) → 任務層 (Task) → 工具層 (Tool)
-```
+The agent operates under a four-layer governance stack:
 
-- **治理層**：強制執行「零幻覺」、「來源標註」以及「JIT 技能加載」規則。
-- **角色層**：投資銀行的股票研究助理。
-- **任務層**：定義了美股情報簡報的 5 個嚴格執行步驟。
-- **工具層**：包含技能管理工具、MCP 工具以及本地 Python 函式。
+> [!NOTE]
+> **Governance → Role → Task → Tool**
 
----
-
-## 準備工作
-
-- Python 3.12+
-- [`uv`](https://docs.astral.sh/uv/) 套件管理工具
-- 已設定環境變數的 Azure OpenAI (或相容) API 金鑰
+1. **Governance Layer**: Enforces zero hallucinations, source attribution, and JIT skill loading.
+2. **Role Layer**: Equity research associate at an investment bank.
+3. **Task Layer**: Defines the five strict steps of the US stock brief workflow.
+4. **Tool Layer**: Skill tools, MCP tools, and local Python helpers.
 
 ---
 
-## 安裝步驟
+<a id="preparation"></a>
 
-**1. 複製儲存庫**
+## 🛠️ Preparation
+
+- **Python**: 3.12+
+- **Manager**: [`uv`](https://docs.astral.sh/uv/) package manager
+- **LLM**: Azure OpenAI (or compatible) API key
+
+---
+
+<a id="installation"></a>
+
+## 📦 Installation
+
+<details open>
+  <summary><strong>1. Clone the repo</strong></summary>
 
 ```bash
 git clone https://github.com/long0426/python-skill-poc.git
 cd python-skill-poc
 ```
+</details>
 
-**2. 使用 `uv` 安裝依賴**
+<details open>
+  <summary><strong>2. Install dependencies via <code>uv</code></strong></summary>
 
 ```bash
 uv sync
 ```
+</details>
 
-**3. 設定環境變數**
-
-在 `my_agent/` 目錄下建立 `.env` 檔案，填入模型憑證：
+<details open>
+  <summary><strong>3. Set environment variables</strong></summary>
+Create `.env` under `my_agent/`:
 
 ```env
-# Azure OpenAI 範例
-AZURE_API_KEY=你的金鑰
-AZURE_API_BASE=https://你的資源名稱.openai.azure.com/
+AZURE_API_KEY=your-key
+AZURE_API_BASE=https://your-resource-name.openai.azure.com/
 AZURE_API_VERSION=2024-02-01
 ```
+</details>
 
-**4. 設定 MCP Server (選配)**
+<details open>
+  <summary><strong>4. Configure MCP servers (optional)</strong></summary>
+The agent can attach multiple MCP servers. Two common sources are listed below along with the corresponding `my_agent/mcp_config.json` settings.
 
-編輯 `my_agent/mcp_config.json` 以指向你的本地 MCP server：
+| Server | Purpose | Highlight |
+| :--- | :--- | :--- |
+| **Yahoo Finance MCP** | Pull real-time/historical quotes & news | Python-based, integrates nicely with UV envs |
+| **Fetcher MCP** | Unified Web/API/RSS fetching | Launch via `npx`, highly extensible |
+
+<details open>
+  <summary><strong>Yahoo Finance MCP</strong></summary>
+
+**Step 1: Clone and create the virtual environment**
+
+```bash
+git clone https://github.com/Alex2Yang97/yahoo-finance-mcp.git
+cd yahoo-finance-mcp
+uv venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+uv pip install -e .
+```
+
+**Step 2: Register the server in `my_agent/mcp_config.json`**
+
+```json
+"yfinance": {
+  "command": "uv",
+  "args": [
+    "--directory",
+    "/absolute/path/to/yahoo-finance-mcp",
+    "run",
+    "server.py"
+  ]
+}
+```
+</details>
+
+<details open>
+  <summary><strong>Fetcher MCP (multi-source data)</strong></summary>
+
+**Step 1:** Follow the [fetcher-mcp](https://github.com/jae-jae/fetcher-mcp) docs to set up API tokens and pipelines.
+
+**Step 2:** Add this entry to `my_agent/mcp_config.json` (use `env` if extra variables are needed):
+
+```json
+"fetcher": {
+  "command": "npx",
+  "args": ["-y", "fetcher-mcp"]
+}
+```
+</details>
+
+<details open>
+  <summary><strong>Example: Multiple MCP servers</strong></summary>
+After completing the steps above, your config can look like this:
 
 ```json
 {
-    "mcpServers": {
-        "yfinance": {
-            "command": "uv",
-            "args": ["--directory", "/path/to/your/yahoo-finance-mcp", "run", "server.py"]
-        }
+  "mcpServers": {
+    "yfinance": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/Users/long0426/Documents/project/mcp/yahoo-finance-mcp",
+        "run",
+        "server.py"
+      ]
+    },
+    "fetcher": {
+      "command": "npx",
+      "args": ["-y", "fetcher-mcp"]
     }
+  }
 }
 ```
 
-> 如果未設定 MCP，Agent 仍可運行，但會缺少外部即時數據獲取能力。
+Restart the agent and you can tap into both data pipelines, selecting the right MCP tool per step.
+</details>
+</details>
 
 ---
 
-## 執行 Agent
+<a id="run-the-agent"></a>
 
-使用 ADK web UI 啟動 Agent：
+## 👋 Run the Agent
+
+Launch via the ADK web UI:
 
 ```bash
 uv run adk web .
 ```
 
-接著開啟瀏覽器並前往 `http://localhost:8000/dev-ui/?app=my_agent`，輸入股票代號開始對話：
+Open `http://localhost:8000/dev-ui/?app=my_agent` and start chatting with ticker symbols:
 
 ```
 AAPL
@@ -178,52 +299,56 @@ TSLA
 
 ---
 
-## 如何新增技能
+<a id="add-new-skills"></a>
 
-1. 在 `my_agent/skills/` 下建立新目錄，例如 `my_agent/skills/risk-assessment/`。
-2. 新增 `SKILL.md` 檔案，並填入 YAML Frontmatter：
+## ➕ Add New Skills
+
+<ol>
+  <li>Create a folder under <code>my_agent/skills/</code>, e.g., <code>my_agent/skills/risk-assessment/</code>.</li>
+  <li>
+    Add <code>SKILL.md</code> with YAML frontmatter:
 
 ```markdown
 ---
 name: risk-assessment
-description: 評估特定股票的下行風險因素與波動率。
+description: Evaluate downside risks and volatility for a specific ticker.
 ---
 
-這裡填入你的 SOP 內容...
+Place your SOP here...
 ```
-
-3. 重啟 Agent —— `SkillManager` 會在啟動時自動發現新技能，無需修改任何程式碼。
+  </li>
+  <li>Restart the agent — <code>SkillManager</code> will auto-discover the new skill at boot.</li>
+</ol>
 
 ---
 
-## 紀錄 (Logging)
+<a id="logging"></a>
 
-每次 LLM 呼叫都會自動記錄在 `my_agent/logs/` 中。每個 Session 會建立一個帶時間戳的子目錄：
+## 📂 Logging
+
+Every LLM call is stored under `my_agent/logs/`. Each session gets a timestamped folder, which is useful for debugging prompts, verifying the injection flow, and auditing token usage.
 
 ```
 my_agent/logs/
 └── AAPL_20260313101500/
-    ├── call_001.txt    # 第一次呼叫的 System Prompt + Context
-    ├── call_002.txt    # 第二次呼叫的內容
+    ├── call_001.txt    # First call: system prompt + context
+    ├── call_002.txt    # Second call contents
     └── ...
 ```
 
-這對於除錯 Prompt 內容、驗證技能注入邏輯以及審計 Token 消耗非常有用。
-
 ---
 
-## 技術堆疊
+<a id="tech-stack"></a>
 
-| 套件 | 用途 |
-|---|---|
-| `google-adk[gradio]` | Agent 框架與網頁 UI |
-| `litellm` | 統一的 LLM API (支援 Azure, OpenAI, Anthropic 等) |
-| `python-frontmatter` | 解析 SKILL.md 的 YAML 元數據 |
-| `pyyaml` | YAML 支援 |
-| `gradio` | 網頁前端介面 |
+## 💎 Tech Stack
+
+| Package | Purpose |
+| :--- | :--- |
+| `google-adk[gradio]` | Agent framework and web UI |
+| `litellm` | Unified LLM API (Azure, OpenAI, Anthropic, etc.) |
+| `python-frontmatter` | Parse YAML metadata from `SKILL.md` |
+| `pyyaml` | YAML support |
+| `gradio` | Web front end |
+| `uv` | Fast project dependency management |
 
 ---
-
-## 授權
-
-MIT

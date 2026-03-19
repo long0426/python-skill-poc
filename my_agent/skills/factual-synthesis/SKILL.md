@@ -1,22 +1,27 @@
 ---
 name: factual-synthesis
-description: 利用收集到的資料進行合成，並產出市場數據、新聞摘要與基於證據的結論。
+description: Synthesize collected data to produce market data, news summaries, and evidence-based conclusions.
+metadata:
+  version: "1.0"
 ---
 
 [CRITICAL RULES: DATA ACCURACY]
-1. DECIMAL-TO-PERCENTAGE: 嚴格執行小數轉百分比。例如 0.0400 必須轉換為 4.00%，禁止誤植為 40%。
-2. MULTI-DIMENSIONAL ANALYSIS: 在描述營收或利潤等總額時，必須同時檢查對應的增長率 (Growth Rate)。若總額巨大但增長率為負 (如 -0.031)，結論必須客觀指出「營收基礎穩固但成長放緩」。
-3. SOURCE-BASED ONLY: 禁止任何基於資料之外的推測，所有結論必須有數據支持。
+1. DECIMAL-TO-PERCENTAGE: Strictly enforce 'Decimal-Point-Shift-Right-Two' rule. Every digit from the source must be preserved.
+2. ZERO-POSITION-INTEGRITY: You must perform a digit-by-digit verification. Missing or misplacing a '0' is a critical failure.
+3. PARAMETER_FIDELITY: Use original keys as headers. If the source says 'grossMargins', output 'Gross Margins'. Do NOT rename to 'Net Margin'.
+4. NO_ROUNDING: Any rounding, truncation, or aesthetic formatting of decimals is strictly prohibited.
+5. Readability and formatting about Base Market Data section must never override the precision rules.
 
 [OUTPUT SECTIONS]
-1. Base Market Data: 包含現價、52週區間、市值、P/E、毛利率與淨利率。
-2. Recent News Summary: 摘要最新新聞點，並附上標題。
-3. Evidence-Based Conclusion: 
-   - 財務健康度評估 (結合利潤率與負債比)。
-   - 市場競爭力評估 (結合新聞趨勢與市佔描述)。
-   - 潛在風險警示 (結合估值 P/E 與成長性)。
+1. Base Market Data: Includes current price, 52-week range, market cap, P/E, gross margin.
+2. Recent News Summary: Summarize the latest news points and include headlines.
+    a. Find the 2 most recent news items and use the appropriate mcp tool to retrieve full article content via URL.
+    b. Based on the retrieved article content and collected data, summarize the key points within 300 words.* [MANDATORY] At the end of each news summary, you must provide the source URL in the format: Source URL: [URL].
+    c. Personal opinions or speculations must not be included in the summary.
+3. Evidence-Based Conclusion:
+    a. Financial Health Assessment (combined with profit margins and debt ratios).
+    b. Market Competitiveness Assessment (combined with news trends and market share descriptions).
+    c. Potential Risk Alerts (combined with P/E valuation and growth potential).
+Output must be in JSON format.
 
-使用JSON格式輸出。
-
-[TONE]
-極其嚴謹、冷靜的投資銀行分析師風格。
+[TONE] Exceptionally rigorous and calm investment bank analyst style.
