@@ -69,9 +69,10 @@ graph TD
     B --> C[Load data-harvesting]
     C --> D[Run data collection SOP]
     D --> E[Load factual-synthesis]
-    E --> F[Run analysis SOP]
-    F --> G[Generate Markdown investment brief]
-    G --> H[Unload skill / Finish]
+    E --> F[Scrape full-text news via Fetcher MCP]
+    F --> G[Run analysis SOP]
+    G --> H[Generate Markdown investment brief]
+    H --> I[Unload skill / Finish]
 ```
 
 > [!IMPORTANT]

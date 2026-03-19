@@ -69,9 +69,10 @@ graph TD
     B --> C[載入 data-harvesting]
     C --> D[執行資料採集 SOP]
     D --> E[載入 factual-synthesis]
-    E --> F[執行分析 SOP]
-    F --> G[產出 Markdown 投資建議報告]
-    G --> H[技能釋放 / 結束]
+    E --> F[透過 Fetcher MCP 抓取新聞內文]
+    F --> G[執行分析 SOP]
+    G --> H[產出 Markdown 投資建議報告]
+    H --> I[技能釋放 / 結束]
 ```
 
 > [!IMPORTANT]

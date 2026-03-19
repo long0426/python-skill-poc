@@ -27,3 +27,11 @@
         - 新增 `README.zh-TW.md` 保留繁體中文內容。
         - 修復圖片絕對路徑問題，統一改為相對路徑 `./logo.png`。
         - 加入中英雙語互通連結。
+
+## [2026-03-19]
+
+### README.md / README.zh-TW.md
+- **修改目的**: 更新 Mermaid 工作流圖表，以符合 `agent.py` 中對 `Fetcher MCP` 的強制調用邏輯。
+- **修改範圍**:
+    - 在 `US Stock Research Assistant` 的 Mermaid 圖表中新增 `Scrape full-text news via Fetcher MCP`（或中文版「透過 Fetcher MCP 抓取新聞內文」）步驟。
+    - 確保圖表邏輯與 `agent.py` 的 Step 4 完全同步。
