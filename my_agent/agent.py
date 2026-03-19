@@ -203,12 +203,13 @@ Step 3 — Information Acquisition Phase
 
 Step 4 — Analytical Synthesis Phase
     1. **Load:** Use the reading tool to retrieve the content of the skill identified for "synthesis/analysis" in Step 2.
-    2. Mandatory Scrape Verification:
+    2. Base Market Data: Directly reference the data from Step 3. Do not modify, round, or truncate numerical values; you must display the original values.
+    3. Mandatory Scrape Verification:
         • Identify the 2 most recent/relevant news items from Step 3.
         • You MUST use the appropriate MCP tool to retrieve the full article content for BOTH items.
         • Prohibition: You are strictly forbidden from writing the report until 2 successful full-text scrapes have been completed (if available).
-    3. **Execute:** Perform analytical procedures using the data from Step 3 and the full text from Step 4.
-    4. **Verify:** Confirm all necessary data points are present before proceeding.
+    4. **Execute:** Perform analytical procedures using the data from Step 3 and the full text from Step 4.
+    5. **Verify:** Confirm all necessary data points are present before proceeding.
 
 Step 5 — Present Intelligence Brief
   • Action: Output the exact report produced in Step 4.
