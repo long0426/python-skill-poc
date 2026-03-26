@@ -1,5 +1,4 @@
 import os
-import re
 import logging
 from datetime import datetime
 from google.adk.agents.base_agent import BaseAgent, BaseAgentConfig
@@ -11,13 +10,14 @@ from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 
-from .agent import root_agent, _LOGS_DIR, _session_dirs, _session_call_counts
+from .agent import root_agent, _LOGS_DIR, _session_dirs, _session_call_counts, _session_tickers, _session_user_prompts
 from .judge_agent import judge_agent
+from .agent_utils import BoundedSessionStore, write_llm_call_log, extract_conclusion
 
 logger = logging.getLogger(__name__)
 
-# 全域暫存每個 session 抽出來的 Conclusion
-_session_conclusions = {}
+# 全域暫存每個 session 抽出來的 Conclusion（使用 BoundedSessionStore 防止記憶體洩漏）
+_session_conclusions = BoundedSessionStore(maxsize=200)
 
 class ContinuousPipelineAgentConfig(BaseAgentConfig):
     pass
@@ -39,13 +39,40 @@ class ContinuousPipelineAgent(BaseAgent):
                             root_text += p.text
                 yield event
 
-        # 2. 擷取 ## Evidence-Based Conclusion 內容
-        conclusion = root_text
-        match = re.search(r"###?\s*Evidence-Based Conclusion(.*)", root_text, re.IGNORECASE | re.DOTALL)
-        if match:
-            conclusion = match.group(1).strip()
-            
+        # 2. 擷取 Evidence-Based Conclusion 內容（使用 extract_conclusion 增加強健性）
+        conclusion = extract_conclusion(root_text)
         _session_conclusions[ctx.invocation_id] = conclusion
+
+        # 守衛：確認 root_agent 已完整執行完畢（必須包含 Evidence-Based Conclusion 標記）
+        # 若缺少此標記，表示 root_agent 因異常（如 Content Policy Error）提前終止，
+        # 此時應停止 pipeline，避免 judge 拿到不完整的結論。
+        _CONCLUSION_MARKERS = [
+            "## Evidence-Based Conclusion",
+            "### Evidence-Based Conclusion",
+            "# Evidence-Based Conclusion",
+        ]
+        root_completed = any(m in root_text for m in _CONCLUSION_MARKERS)
+        if not root_completed:
+            logger.warning(
+                "[Pipeline] root_agent 未產出完整結論，跳過 Judge Agent。"
+                f"(root_text 長度: {len(root_text)})"
+            )
+            yield Event(
+                invocation_id=ctx.invocation_id,
+                author="System",
+                content=types.Content(
+                    role="model",
+                    parts=[types.Part.from_text(
+                        text=(
+                            "\n\n---\n\n"
+                            "**[System] 警告：第一階段分析未能完成（可能因 Content Policy 或其他錯誤提前中止），"
+                            "Judge Agent 已跳過。請重新輸入 Ticker 再試一次。**\n\n"
+                        )
+                    )],
+                ),
+                branch=ctx.branch
+            )
+            return
 
         # Yield a separator event for the user UI
         yield Event(
@@ -61,25 +88,44 @@ class ContinuousPipelineAgent(BaseAgent):
                 yield event
 
 
-# 全域暫存每個 session 的 judge 呼叫次數與資料夾
-_judge_call_counts = {}
-_judge_session_dirs = {}
+
+# 全域暫存每個 session 的 judge 呼叫次數與資料夾（使用 BoundedSessionStore 防止記憶體洩漏）
+_judge_call_counts = BoundedSessionStore(maxsize=200)
+_judge_session_dirs = BoundedSessionStore(maxsize=200)
 
 def judge_before_model_callback(
     callback_context: CallbackContext, llm_request: LlmRequest
 ) -> LlmResponse | None:
     inv_id = callback_context.invocation_id
-    
+
+    # --- 截斷跨 ticker 的對話歷史 ---
+    # ADK session 的 contents 會跨 invocation 累積所有歷史。
+    # --- 截斷跨 ticker 的對話歷史 ---
+    # 改用 _session_user_prompts 進行完美的全文字串比對
+    # 這樣不會有 substring 誤殺的問題，也不會像 UUID 那樣被 ADK 清除
+    exact_prompt = _session_user_prompts.get(inv_id, "")
+    if exact_prompt and llm_request.contents:
+        cut_idx = 0  # fallback: 不截斷
+        for i in range(len(llm_request.contents) - 1, -1, -1):
+            content = llm_request.contents[i]
+            if getattr(content, "role", "") != "user":
+                continue
+            match_found = False
+            for p in content.parts:
+                if hasattr(p, "text") and p.text and str(p.text) == exact_prompt:
+                    cut_idx = i
+                    match_found = True
+                    break
+            if match_found:
+                break
+        if cut_idx > 0:
+            llm_request.contents = llm_request.contents[cut_idx:]
+
     if inv_id not in _judge_session_dirs:
-        ticker = "judge_unknown"
-        if llm_request.contents and getattr(llm_request.contents[0], "parts", None):
-            first_part = llm_request.contents[0].parts[0]
-            if hasattr(first_part, "text") and first_part.text:
-                ticker = str(first_part.text).strip()
-                
+        # 優先從 root_agent 已確認的 ticker 讀取，避免從 contents 猜測造成連續查詢時存錯位置
+        safe_ticker = _session_tickers.get(inv_id, "judge_unknown") or "judge_unknown"
+        
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        safe_ticker = "".join(c for c in ticker if c.isalnum() or c in ('-', '_'))
-        if not safe_ticker: safe_ticker = "judge_unknown"
         
         # 開新的資料夾來存 judge 特有的 logs
         session_dir = os.path.join(_LOGS_DIR, f"{safe_ticker}_{timestamp}_judge")
@@ -94,17 +140,26 @@ def judge_before_model_callback(
     conclusion = _session_conclusions.get(inv_id, "無額外萃取的結論")
 
     # 判斷是否需要加入觸發 prompt (只有第一次呼叫 judge 時才加入)
-    if call_seq == 1 and llm_request.contents and getattr(llm_request.contents[-1], "role", "") != "user":
-        llm_request.contents.append(
-            types.Content(role="user", parts=[types.Part.from_text(text=(
-                "以下是原本 agent 的產出結論：\n"
-                "------------------\n"
-                f"[GENERATED_SUMMARY]:\n{conclusion}\n"
-                "------------------\n"
-                "請根據上述的結論，自動執行 TASK: THE CLOSED-DOMAIN AUDIT。\n"
-                "請自行透過 MCP Tool 與現有 Skills 重新擷取資料作為 [SOURCE_ARTICLES] 的驗證基礎，最後依照你的 OUTPUT POLICY 產出嚴格核對的審查報告。"
-            ))])
+    if call_seq == 1 and llm_request.contents:
+        prompt_text = (
+            "以下是原本 agent 的產出結論：\n"
+            "------------------\n"
+            f"[GENERATED_SUMMARY]:\n{conclusion}\n"
+            "------------------\n"
+            "請根據上述的結論，自動執行 TASK: THE CLOSED-DOMAIN AUDIT。\n"
+            "請自行透過 MCP Tool 與現有 Skills 重新擷取資料作為 [SOURCE_ARTICLES] 的驗證基礎，最後依照你的 OUTPUT POLICY 產出嚴格核對的審查報告。"
         )
+        last_role = getattr(llm_request.contents[-1], "role", "")
+        if last_role != "user":
+            # 最後不是 user，正常新增一個 user content
+            llm_request.contents.append(
+                types.Content(role="user", parts=[types.Part.from_text(text=prompt_text)])
+            )
+        else:
+            # 最後已是 user（ADK 串接常見情境），直接附加至其 parts 避免連續 user 報錯
+            llm_request.contents[-1].parts.append(
+                types.Part.from_text(text="\n\n" + prompt_text)
+            )
 
     # 計算並寫入內容
     context_parts = []
@@ -112,28 +167,28 @@ def judge_before_model_callback(
         for c in getattr(part, "parts", []):
             context_parts.append(str(c))
     context_str = "\n".join(context_parts)
-    
+
     sys_instruction = (
         llm_request.config.system_instruction
         if llm_request.config and llm_request.config.system_instruction else ""
     )
     sys_str = str(sys_instruction)
-    
+
     logger.info(
         f"⚖️ [Judge LLM 請求] 第 {call_seq} 次呼叫 | "
         f"Context 字元數: {len(context_str)} | Sys: {len(sys_str)}"
     )
 
-    log_file = os.path.join(current_log_dir, f"judge_call_{call_seq:03d}.txt")
-    with open(log_file, "w", encoding="utf-8") as f:
-        f.write(f"==== 裁判 AI 第 {call_seq} 次 LLM 呼叫 ====\n")
-        f.write(f"invocation_id: {callback_context.invocation_id}\n\n")
-        f.write("---- System Prompt ----\n")
-        f.write(sys_str)
-        f.write("\n\n---- Context (Contents) ----\n")
-        f.write(context_str)
-        f.write("\n")
-        
+    log_file = write_llm_call_log(
+        log_dir=current_log_dir,
+        seq=call_seq,
+        inv_id=callback_context.invocation_id,
+        sys_str=sys_str,
+        context_str=context_str,
+        prefix="judge_call",
+    )
+    logger.info(f"📝 [Judge LLM 請求] 內容已儲存至 {log_file}")
+
     return None
 
 judge_agent.before_model_callback = judge_before_model_callback

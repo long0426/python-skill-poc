@@ -14,11 +14,16 @@ from google.adk.agents.callback_context import CallbackContext
 from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
 
+from .agent_utils import BoundedSessionStore, write_llm_call_log
+
+
 logger = logging.getLogger(__name__)
 
-# 紀錄 session 對應的目錄與呼叫次數
-_session_dirs = {}
-_session_call_counts = {}
+# 紀錄 session 對應的目錄、呼叫次數與 ticker（使用 BoundedSessionStore 防止記憶體洩漏）
+_session_dirs = BoundedSessionStore(maxsize=200)
+_session_call_counts = BoundedSessionStore(maxsize=200)
+_session_tickers = BoundedSessionStore(maxsize=200)  # 供 judge_before_model_callback 正確讀取 ticker
+_session_user_prompts = BoundedSessionStore(maxsize=200) # 供精確全文比對截斷
 
 # logs 目錄（與 agent.py 同層）
 _LOGS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
@@ -40,8 +45,6 @@ def log_prompt_length(
             has_text = any(hasattr(p, "text") and p.text for p in content.parts)
             has_func_resp = any(hasattr(p, "function_response") and p.function_response for p in content.parts)
             
-            # 若是使用者單純的文字訊息（我們假設這代表一個新的 Ticker 輸入）
-            # 並且不是工具的返回結果
             if getattr(content, "role", "") == "user" and has_text and not has_func_resp:
                 last_user_idx = i
                 break
@@ -51,10 +54,14 @@ def log_prompt_length(
 
     if inv_id not in _session_dirs:
         ticker = "unknown"
+        exact_user_text = ""
         if llm_request.contents and llm_request.contents[0].parts:
             first_part = llm_request.contents[0].parts[0]
             if hasattr(first_part, "text") and first_part.text:
-                ticker = str(first_part.text).strip()
+                exact_user_text = str(first_part.text)
+                ticker = exact_user_text.strip()
+        
+        _session_user_prompts[inv_id] = exact_user_text
         
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         safe_ticker = "".join(c for c in ticker if c.isalnum() or c in ('-', '_'))
@@ -65,6 +72,7 @@ def log_prompt_length(
         os.makedirs(session_dir, exist_ok=True)
         _session_dirs[inv_id] = session_dir
         _session_call_counts[inv_id] = 0
+        _session_tickers[inv_id] = safe_ticker  # 記錄正確的 ticker 供 judge 使用
 
     _session_call_counts[inv_id] += 1
     call_seq = _session_call_counts[inv_id]
@@ -93,15 +101,14 @@ def log_prompt_length(
     )
 
     # --- 將完整內容寫入子目錄下的 call_{N}.txt ---
-    log_file = os.path.join(current_log_dir, f"call_{call_seq:03d}.txt")
-    with open(log_file, "w", encoding="utf-8") as f:
-        f.write(f"==== 第 {call_seq} 次 LLM 呼叫 ====\n")
-        f.write(f"invocation_id: {callback_context.invocation_id}\n\n")
-        f.write("---- System Prompt ----\n")
-        f.write(sys_str)
-        f.write("\n\n---- Context (Contents) ----\n")
-        f.write(context_str)
-        f.write("\n")
+    log_file = write_llm_call_log(
+        log_dir=current_log_dir,
+        seq=call_seq,
+        inv_id=callback_context.invocation_id,
+        sys_str=sys_str,
+        context_str=context_str,
+        prefix="call",
+    )
     logger.info(f"📝 [LLM 請求] 內容已儲存至 {log_file}")
 
     return None  # None means: proceed with the actual LLM call

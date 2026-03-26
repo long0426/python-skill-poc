@@ -65,18 +65,21 @@ When a user provides a ticker (e.g., `AAPL`, `NVDA`), the agent executes this wo
 
 ```mermaid
 graph TD
-    A[Start] --> B{Skill Discovery}
+    A[Start] --> |Root Agent| B{Skill Discovery}
     B --> C[Load data-harvesting]
     C --> D[Run data collection SOP]
     D --> E[Load factual-synthesis]
     E --> F[Scrape full-text news via Fetcher MCP]
     F --> G[Run analysis SOP]
-    G --> H[Generate Markdown investment brief]
-    H --> I[Unload skill / Finish]
+    G --> H[Generate Initial Markdown Brief]
+    H --> |Pipeline Agent| I[Judge Agent executes Closed-Domain Audit]
+    I --> J[Cross-check facts against Tool Context]
+    J --> K[Generate Final Strict Evaluation Report]
+    K --> L[Finish]
 ```
 
 > [!IMPORTANT]
-> The agent never loads both skills at the same time. It strictly follows **"load → execute → move on"**.
+> The Root Agent never loads both skills at the same time. It strictly follows **"load → execute → move on"**. Once finished, the **Pipeline Agent** automatically intercepts the conclusion and triggers the **Judge Agent** to detect hallucinations.
 
 ---
 
@@ -89,7 +92,10 @@ python-skill-poc/
 ├── main.py                         # Entry point (prints boot info only)
 ├── pyproject.toml                  # Dependencies managed by uv
 └── my_agent/
-    ├── agent.py                    # ADK agent definition, MCP tools, callbacks
+    ├── agent.py                    # Root agent definition, MCP tools, callbacks
+    ├── pipeline_agent.py           # Orchestrates Root & Judge agents into a continuous workflow
+    ├── judge_agent.py              # Strict Inspector agent for hallucination detection
+    ├── agent_utils.py              # Utilities for session management, text extraction, & logging
     ├── skill_manager.py            # Scans skills/, parses SKILL.md metadata
     ├── mcp_config.json             # MCP Server config (e.g., Yahoo Finance)
     ├── mcp_config_dataset.json     # Sample MCP config
@@ -143,15 +149,24 @@ Steps:
 
 ## 🛡️ System Prompt Design
 
-The agent operates under a four-layer governance stack:
+The project employs a **Dual-Agent Architecture** to enforce reliability:
+
+### 1. Root Agent (Researcher)
+The `root_agent` operates under a four-layer governance stack:
 
 > [!NOTE]
 > **Governance → Role → Task → Tool**
 
 1. **Governance Layer**: Enforces zero hallucinations, source attribution, and JIT skill loading.
 2. **Role Layer**: Equity research associate at an investment bank.
-3. **Task Layer**: Defines the five strict steps of the US stock brief workflow.
+3. **Task Layer**: Defines the strictly ordered steps of the US stock brief workflow.
 4. **Tool Layer**: Skill tools, MCP tools, and local Python helpers.
+
+### 2. Judge Agent (Strict Inspector)
+The `judge_agent` triggers automatically after the root agent finishes:
+- **Zero-Knowledge Rule**: Operates strictly on the provided context, ignoring external pre-trained knowledge.
+- **Closed-Domain Audit**: Deconstructs the summary into "Atomic Claims" and maps them exactly to the raw data retrieved by MCP tools.
+- **Hallucination Detection**: Flags Contradictory statements, Fabrications, Logical Overreach, and Contextual Leakage.
 
 ---
 
@@ -326,13 +341,15 @@ Place your SOP here...
 
 ## 📂 Logging
 
-Every LLM call is stored under `my_agent/logs/`. Each session gets a timestamped folder, which is useful for debugging prompts, verifying the injection flow, and auditing token usage.
+Every LLM call is stored under `my_agent/logs/`. Sessions are tracked uniquely per ticker, preserving exact prompt contexts and verifying the injection flow.
 
-```
+```text
 my_agent/logs/
-└── AAPL_20260313101500/
-    ├── call_001.txt    # First call: system prompt + context
-    ├── call_002.txt    # Second call contents
+├── AAPL_20260313101500/          # Root Agent (Researcher) session logs
+│   ├── call_001.txt              # First call: system prompt + context
+│   └── call_002.txt              # Subsequent calls
+└── AAPL_20260313101500_judge/    # Judge Agent session logs
+    ├── judge_call_001.txt        # Closed-domain audit prompt and context
     └── ...
 ```
 

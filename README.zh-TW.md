@@ -65,18 +65,21 @@ Skill 格式參考了 <a href="https://agentskills.io/specification">agentskills
 
 ```mermaid
 graph TD
-    A[開始] --> B{技能發現 Skill Discovery}
+    A[開始] --> |Root Agent| B{技能發現 Skill Discovery}
     B --> C[載入 data-harvesting]
     C --> D[執行資料採集 SOP]
     D --> E[載入 factual-synthesis]
     E --> F[透過 Fetcher MCP 抓取新聞內文]
     F --> G[執行分析 SOP]
-    G --> H[產出 Markdown 投資建議報告]
-    H --> I[技能釋放 / 結束]
+    G --> H[產出初步 Markdown 投資建議報告]
+    H --> |Pipeline Agent| I[Judge Agent 進入嚴格閉卷審查]
+    I --> J[依照工具擷取之脈絡進行事實交叉比對]
+    J --> K[產出最終嚴格檢核報告]
+    K --> L[結束]
 ```
 
 > [!IMPORTANT]
-> Agent 永遠不會同時加載這兩個技能，而是遵循嚴格的 <strong>「載入 → 執行 → 繼續下一步」</strong> 的循環。
+> Root Agent 永遠不會同時加載這兩個技能。流程結束後，**Pipeline Agent** 會自動攔截結論，並觸發 **Judge Agent** 執行嚴格的幻覺檢測與邏輯審查。
 
 ---
 
@@ -89,7 +92,10 @@ python-skill-poc/
 ├── main.py                         # 程式進入點 (僅印出啟動資訊)
 ├── pyproject.toml                  # 使用 uv 管理的依賴套件
 └── my_agent/
-    ├── agent.py                    # ADK Agent 定義、MCP 工具組、回調函式
+    ├── agent.py                    # Root Agent 定義、MCP 工具組、回調函式
+    ├── pipeline_agent.py           # 負責編排 Root & Judge Agent 成為連續自動化工作流
+    ├── judge_agent.py              # Strict Inspector (裁判 Agent)，專職幻覺檢測與邏輯審查
+    ├── agent_utils.py              # 協助處理 Session、文本提取與 Log 紀錄的工具程式
     ├── skill_manager.py            # 掃描 skills/ 目錄，解析 SKILL.md 的標記資料
     ├── mcp_config.json             # MCP Server 設定 (例如：Yahoo Finance)
     ├── mcp_config_dataset.json     # 備用的 MCP 設定範例
@@ -143,15 +149,24 @@ metadata:
 
 ## 🛡️ System Prompt 設計
 
-Agent 運行於一個四層治理架構下：
+本專案採用 **雙代理人架構 (Dual-Agent Architecture)** 以確保輸出可靠性：
+
+### 1. Root Agent (分析研究員)
+`root_agent` 運行於一個四層治理架構下：
 
 > [!NOTE]
 > <strong>治理層 (Governance)</strong> → <strong>角色層 (Role)</strong> → <strong>任務層 (Task)</strong> → <strong>工具層 (Tool)</strong>
 
 1. **治理層**：強制執行「零幻覺」、「來源標註」以及「JIT Skill 加載」規則。
 2. **角色層**：投資銀行的股票研究助理。
-3. **任務層**：定義了美股情報簡報的 5 個嚴格執行步驟。
+3. **任務層**：定義了嚴格執行順序的美股情報簡報 workflow 步驟。
 4. **工具層**：包含 Skill 管理工具、MCP 工具以及本地 Python 函式。
+
+### 2. Judge Agent (嚴格審查員)
+當 Root Agent 產出報告後，`judge_agent` 會自動被觸發：
+- **零知識原則 (Zero-Knowledge Rule)**：必須無視所有模型預訓練的外部知識，僅根據系統拋入的 Context 進行驗證。
+- **閉卷審查 (Closed-Domain Audit)**：將生成結論拆解為「原子宣告 (Atomic Claims)」，並與 MCP 工具抓回來的真實資料進行 1:1 比對。
+- **幻覺檢測 (Hallucination Detection)**：標記並抓出邏輯矛盾、捏造數據、過度延伸推理，或是上下文外洩等情況。
 
 ---
 
@@ -326,13 +341,15 @@ description: 評估特定股票的下行風險因素與波動率。
 
 ## 📂 紀錄 (Logging)
 
-每次 LLM 呼叫都會自動記錄在 <code>my_agent/logs/</code> 中。每個 Session 會建立一個帶時間戳的子目錄，這對於除錯 Prompt 內容、驗證技能注入邏輯以及審計 Token 消耗非常有用。
+每次 LLM 呼叫都會自動記錄在 <code>my_agent/logs/</code> 中。系統會針對每個股票代號建立獨立的 Session，確保 Prompt Context 得以被精確還原與追蹤。
 
-```
+```text
 my_agent/logs/
-└── AAPL_20260313101500/
-    ├── call_001.txt    # 第一次呼叫的 System Prompt + Context
-    ├── call_002.txt    # 第二次呼叫的內容
+├── AAPL_20260313101500/          # Root Agent (分析員) 的對話日誌
+│   ├── call_001.txt              # 第一次呼叫的 System Prompt + Context
+│   └── call_002.txt              # 後續調用步驟
+└── AAPL_20260313101500_judge/    # Judge Agent (審查員) 的專屬日誌
+    ├── judge_call_001.txt        # 閉卷審查使用的 Prompt 與擷取事實 Context
     └── ...
 ```
 

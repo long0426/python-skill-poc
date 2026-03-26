@@ -35,3 +35,21 @@
 - **修改範圍**:
     - 在 `US Stock Research Assistant` 的 Mermaid 圖表中新增 `Scrape full-text news via Fetcher MCP`（或中文版「透過 Fetcher MCP 抓取新聞內文」）步驟。
     - 確保圖表邏輯與 `agent.py` 的 Step 4 完全同步。
+
+## [2026-03-25]
+
+### my_agent/judge_agent.py
+- **修改目的**: 重構 `system_prompt` 以嚴格遵守 Governance → Role → Task → Tool 的四層架構，並合併重複的邏輯以提升清晰度與模型遵循度。
+- **修改範圍**:
+    - 將 `Output Policy` 移至 Governance，作為頂層要求。
+    - 將原本兩個重複的 Role 區塊合併為單一區塊。
+    - 將 Governance 中的 `Multi-step Checking Logic` 與 TASK 區塊原有的 4 步驟 Audit 工作流進行合併，統整為 6 步驟。
+    - 將 `Tool priority order` 由 Governance 移至 Tool 層級。
+
+## [2026-03-26]
+
+### my_agent/pipeline_agent.py & my_agent/agent.py
+- **修改目的**: 解決跨輪查詢的 Context Leakage，同時完美保留包含其他文字的 Context。之前使用 UUID 標記注入的方式，因為 ADK 的 History 原生重建機制，會導致標記被洗掉且造成目錄命名異常（混入 UUID 字串）。
+- **修改範圍**:
+    - `my_agent/agent.py`: 移除 UUID 注入寫法，新增 `_session_user_prompts` BoundedSessionStore。在第一次遇到新的 User Message 時，將**完全精確的使用者原始輸入內容**記錄下來。
+    - `my_agent/pipeline_agent.py`: 將跨輪截斷邏輯，改為透過 `exact_prompt = _session_user_prompts.get(inv_id)` 進行**精確字串比對 (`==`)**，不再使用 substring 或 UUID，確保 100% 精準找到每回合的歷史切割點且不影響原始 Context 內容。
